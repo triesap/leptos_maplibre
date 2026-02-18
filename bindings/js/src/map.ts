@@ -50,16 +50,42 @@ interface MapClickPayload {
   features: FeatureHit[];
 }
 
+type MapEventKind = "move" | "zoom" | "idle" | "style_data" | "data";
+
+interface MapViewStatePayload {
+  center_lng: number;
+  center_lat: number;
+  zoom: number;
+  bearing: number;
+  pitch: number;
+}
+
+interface MapEventPayload {
+  kind: MapEventKind;
+  view: MapViewStatePayload;
+}
+
 type ClickCallback = (payload: MapClickPayload) => void;
 type LoadCallback = () => void;
+type MapEventCallback = (payload: MapEventPayload) => void;
+
+interface MapEventHandlers {
+  move: () => void;
+  zoom: () => void;
+  idle: () => void;
+  styledata: () => void;
+  data: () => void;
+}
 
 let next_id = 1;
 const maps = new globalThis.Map<number, MaplibreMap>();
 const observers = new globalThis.Map<number, ResizeObserver>();
 const click_cbs = new globalThis.Map<number, ClickCallback>();
 const load_cbs = new globalThis.Map<number, LoadCallback>();
+const map_event_cbs = new globalThis.Map<number, MapEventCallback>();
 const click_handlers = new globalThis.Map<number, (event: MapLayerMouseEvent) => void>();
 const load_handlers = new globalThis.Map<number, () => void>();
+const map_event_handlers = new globalThis.Map<number, MapEventHandlers>();
 
 function log_bridge_error(context: string, error: unknown): void {
   console.error(`leptos_maplibre ${context}:`, error);
@@ -113,6 +139,28 @@ function resolve_feature_id(feature_id: unknown): string | number | undefined {
     }
   }
   return undefined;
+}
+
+function current_view_state(map: MaplibreMap): MapViewStatePayload {
+  const center = map.getCenter();
+  return {
+    center_lng: center.lng,
+    center_lat: center.lat,
+    zoom: map.getZoom(),
+    bearing: map.getBearing(),
+    pitch: map.getPitch(),
+  };
+}
+
+function emit_map_event(handle: number, map: MaplibreMap, kind: MapEventKind): void {
+  const callback = map_event_cbs.get(handle);
+  if (callback === undefined) {
+    return;
+  }
+  callback({
+    kind,
+    view: current_view_state(map),
+  });
 }
 
 function apply_native_controls(map: MaplibreMap, controls: NativeControlOptions | undefined): void {
@@ -227,8 +275,19 @@ export function destroy_map(handle: number): void {
     load_handlers.delete(handle);
   }
 
+  const map_events = map_event_handlers.get(handle);
+  if (map_events !== undefined) {
+    map.off("move", map_events.move);
+    map.off("zoom", map_events.zoom);
+    map.off("idle", map_events.idle);
+    map.off("styledata", map_events.styledata);
+    map.off("data", map_events.data);
+    map_event_handlers.delete(handle);
+  }
+
   click_cbs.delete(handle);
   load_cbs.delete(handle);
+  map_event_cbs.delete(handle);
 
   try {
     map.remove();
@@ -485,4 +544,59 @@ export function unregister_on_load(handle: number): void {
   }
 
   load_cbs.delete(handle);
+}
+
+export function register_on_map_events(handle: number, cb: MapEventCallback): void {
+  const map = get_map(handle);
+  if (map === undefined) {
+    return;
+  }
+
+  map_event_cbs.set(handle, cb);
+
+  const previous = map_event_handlers.get(handle);
+  if (previous !== undefined) {
+    map.off("move", previous.move);
+    map.off("zoom", previous.zoom);
+    map.off("idle", previous.idle);
+    map.off("styledata", previous.styledata);
+    map.off("data", previous.data);
+    map_event_handlers.delete(handle);
+  }
+
+  const handlers: MapEventHandlers = {
+    move: () => emit_map_event(handle, map, "move"),
+    zoom: () => emit_map_event(handle, map, "zoom"),
+    idle: () => emit_map_event(handle, map, "idle"),
+    styledata: () => emit_map_event(handle, map, "style_data"),
+    data: () => emit_map_event(handle, map, "data"),
+  };
+
+  map_event_handlers.set(handle, handlers);
+  map.on("move", handlers.move);
+  map.on("zoom", handlers.zoom);
+  map.on("idle", handlers.idle);
+  map.on("styledata", handlers.styledata);
+  map.on("data", handlers.data);
+}
+
+export function unregister_on_map_events(handle: number): void {
+  const map = get_map(handle);
+  if (map === undefined) {
+    map_event_cbs.delete(handle);
+    map_event_handlers.delete(handle);
+    return;
+  }
+
+  const handlers = map_event_handlers.get(handle);
+  if (handlers !== undefined) {
+    map.off("move", handlers.move);
+    map.off("zoom", handlers.zoom);
+    map.off("idle", handlers.idle);
+    map.off("styledata", handlers.styledata);
+    map.off("data", handlers.data);
+    map_event_handlers.delete(handle);
+  }
+
+  map_event_cbs.delete(handle);
 }
