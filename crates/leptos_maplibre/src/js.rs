@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(module = "/bindings/js/src/map.ts")]
+#[wasm_bindgen(module = "/bindings/js/src/map.js")]
 extern "C" {
     #[wasm_bindgen(catch, js_name = init_map)]
     fn js_init_map(container: &web_sys::HtmlElement, options: &JsValue) -> Result<u32, JsValue>;
@@ -79,6 +79,12 @@ extern "C" {
 
     #[wasm_bindgen(catch, js_name = unregister_on_load)]
     fn js_unregister_on_load(handle: u32) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = register_on_map_events)]
+    fn js_register_on_map_events(handle: u32, cb: &js_sys::Function) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = unregister_on_map_events)]
+    fn js_unregister_on_map_events(handle: u32) -> Result<(), JsValue>;
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -183,6 +189,20 @@ pub(crate) fn unregister_on_load(handle: MapHandle) {
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
 pub(crate) fn unregister_on_load(_handle: MapHandle) {}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn register_on_map_events(handle: MapHandle, callback: &js_sys::Function) {
+    if let Err(error) = js_register_on_map_events(handle.0, callback) {
+        log_bridge_error("register_on_map_events", error);
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn unregister_on_map_events(handle: MapHandle) {
+    if let Err(error) = js_unregister_on_map_events(handle.0) {
+        log_bridge_error("unregister_on_map_events", error);
+    }
+}
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn parse_click_payload(payload: JsValue) -> Option<MapClickEvent> {

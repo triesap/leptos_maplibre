@@ -4,20 +4,9 @@ use leptos_maplibre::MapHandle;
 use crate::events::MapEvent;
 
 #[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-
-#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
-
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(module = "/bindings/js/src/map.ts")]
-extern "C" {
-    #[wasm_bindgen(catch, js_name = register_on_map_events)]
-    fn js_register_on_map_events(handle: u32, cb: &js_sys::Function) -> Result<(), JsValue>;
-
-    #[wasm_bindgen(catch, js_name = unregister_on_map_events)]
-    fn js_unregister_on_map_events(handle: u32) -> Result<(), JsValue>;
-}
+use wasm_bindgen::JsValue;
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) type MapEventClosure = wasm_bindgen::closure::Closure<dyn FnMut(JsValue)>;
@@ -32,16 +21,12 @@ fn log_bridge_error(context: &str, error: JsValue) {
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn register_on_map_events(handle: MapHandle, callback: &MapEventClosure) {
-    if let Err(error) = js_register_on_map_events(handle.0, callback.as_ref().unchecked_ref()) {
-        log_bridge_error("register_on_map_events", error);
-    }
+    leptos_maplibre::register_on_map_events_js(handle, callback.as_ref().unchecked_ref());
 }
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn unregister_on_map_events(handle: MapHandle) {
-    if let Err(error) = js_unregister_on_map_events(handle.0) {
-        log_bridge_error("unregister_on_map_events", error);
-    }
+    leptos_maplibre::unregister_on_map_events_js(handle);
 }
 
 #[cfg(not(target_arch = "wasm32"))]

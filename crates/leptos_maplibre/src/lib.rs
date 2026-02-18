@@ -72,6 +72,16 @@ pub fn set_feature_state(
     js::set_feature_state(handle, source_id, source_layer, feature_id, state);
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn register_on_map_events_js(handle: MapHandle, callback: &js_sys::Function) {
+    js::register_on_map_events(handle, callback);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn unregister_on_map_events_js(handle: MapHandle) {
+    js::unregister_on_map_events(handle);
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
