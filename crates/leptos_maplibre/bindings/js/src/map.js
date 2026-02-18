@@ -1,7 +1,15 @@
 import maplibregl from "https://esm.sh/maplibre-gl@5.13.0";
 let next_id = 1;
+let next_marker_id = 1;
+let next_popup_id = 1;
 const maps = new globalThis.Map();
 const observers = new globalThis.Map();
+const markers = new globalThis.Map();
+const marker_maps = new globalThis.Map();
+const map_markers = new globalThis.Map();
+const popups = new globalThis.Map();
+const popup_maps = new globalThis.Map();
+const map_popups = new globalThis.Map();
 const click_cbs = new globalThis.Map();
 const load_cbs = new globalThis.Map();
 const map_event_cbs = new globalThis.Map();
@@ -124,6 +132,56 @@ function layer_key(handle, layer_id) {
 }
 function layer_key_prefix(handle) {
     return `${handle}${layer_key_delimiter}`;
+}
+function track_marker(handle, marker_handle) {
+    const existing = map_markers.get(handle);
+    if (existing !== undefined) {
+        existing.add(marker_handle);
+    }
+    else {
+        map_markers.set(handle, new globalThis.Set([marker_handle]));
+    }
+    marker_maps.set(marker_handle, handle);
+}
+function untrack_marker(marker_handle) {
+    const handle = marker_maps.get(marker_handle);
+    if (handle === undefined) {
+        return;
+    }
+    marker_maps.delete(marker_handle);
+    const marker_set = map_markers.get(handle);
+    if (marker_set === undefined) {
+        return;
+    }
+    marker_set.delete(marker_handle);
+    if (marker_set.size === 0) {
+        map_markers.delete(handle);
+    }
+}
+function track_popup(handle, popup_handle) {
+    const existing = map_popups.get(handle);
+    if (existing !== undefined) {
+        existing.add(popup_handle);
+    }
+    else {
+        map_popups.set(handle, new globalThis.Set([popup_handle]));
+    }
+    popup_maps.set(popup_handle, handle);
+}
+function untrack_popup(popup_handle) {
+    const handle = popup_maps.get(popup_handle);
+    if (handle === undefined) {
+        return;
+    }
+    popup_maps.delete(popup_handle);
+    const popup_set = map_popups.get(handle);
+    if (popup_set === undefined) {
+        return;
+    }
+    popup_set.delete(popup_handle);
+    if (popup_set.size === 0) {
+        map_popups.delete(handle);
+    }
 }
 function query_layer_features(map, event, layer_id) {
     if (event.features !== undefined) {
@@ -299,6 +357,42 @@ export function destroy_map(handle) {
     click_cbs.delete(handle);
     load_cbs.delete(handle);
     map_event_cbs.delete(handle);
+    const marker_set = map_markers.get(handle);
+    if (marker_set !== undefined) {
+        for (const marker_handle of marker_set) {
+            const marker = markers.get(marker_handle);
+            if (marker === undefined) {
+                continue;
+            }
+            try {
+                marker.remove();
+            }
+            catch (error) {
+                log_bridge_error("destroy_map_marker", error);
+            }
+            markers.delete(marker_handle);
+            marker_maps.delete(marker_handle);
+        }
+        map_markers.delete(handle);
+    }
+    const popup_set = map_popups.get(handle);
+    if (popup_set !== undefined) {
+        for (const popup_handle of popup_set) {
+            const popup = popups.get(popup_handle);
+            if (popup === undefined) {
+                continue;
+            }
+            try {
+                popup.remove();
+            }
+            catch (error) {
+                log_bridge_error("destroy_map_popup", error);
+            }
+            popups.delete(popup_handle);
+            popup_maps.delete(popup_handle);
+        }
+        map_popups.delete(handle);
+    }
     const prefix = layer_key_prefix(handle);
     for (const [key, handlers] of layer_event_handlers.entries()) {
         if (!key.startsWith(prefix)) {
@@ -470,6 +564,108 @@ export function fly_to(handle, lng, lat, zoom, duration_ms) {
     }
     catch (error) {
         log_bridge_error("fly_to", error);
+    }
+}
+export function create_marker(handle, lng, lat, draggable) {
+    const map = get_map(handle);
+    if (map === undefined) {
+        return 0;
+    }
+    try {
+        const marker = new maplibregl.Marker({ draggable: draggable === true })
+            .setLngLat([lng, lat])
+            .addTo(map);
+        const marker_handle = next_marker_id;
+        next_marker_id += 1;
+        markers.set(marker_handle, marker);
+        track_marker(handle, marker_handle);
+        return marker_handle;
+    }
+    catch (error) {
+        log_bridge_error("create_marker", error);
+        return 0;
+    }
+}
+export function update_marker(marker_handle, lng, lat, draggable) {
+    const marker = markers.get(marker_handle);
+    if (marker === undefined) {
+        return;
+    }
+    try {
+        marker.setLngLat([lng, lat]);
+        marker.setDraggable(draggable === true);
+    }
+    catch (error) {
+        log_bridge_error("update_marker", error);
+    }
+}
+export function remove_marker(marker_handle) {
+    const marker = markers.get(marker_handle);
+    if (marker === undefined) {
+        return;
+    }
+    try {
+        marker.remove();
+    }
+    catch (error) {
+        log_bridge_error("remove_marker", error);
+    }
+    finally {
+        markers.delete(marker_handle);
+        untrack_marker(marker_handle);
+    }
+}
+export function create_popup(handle, lng, lat, html, close_button, close_on_click) {
+    const map = get_map(handle);
+    if (map === undefined) {
+        return 0;
+    }
+    try {
+        const popup = new maplibregl.Popup({
+            closeButton: close_button === true,
+            closeOnClick: close_on_click === true,
+        })
+            .setLngLat([lng, lat])
+            .setHTML(html)
+            .addTo(map);
+        const popup_handle = next_popup_id;
+        next_popup_id += 1;
+        popups.set(popup_handle, popup);
+        track_popup(handle, popup_handle);
+        return popup_handle;
+    }
+    catch (error) {
+        log_bridge_error("create_popup", error);
+        return 0;
+    }
+}
+export function update_popup(popup_handle, lng, lat, html) {
+    const popup = popups.get(popup_handle);
+    if (popup === undefined) {
+        return;
+    }
+    try {
+        popup.setLngLat([lng, lat]);
+        popup.setHTML(html);
+    }
+    catch (error) {
+        log_bridge_error("update_popup", error);
+    }
+}
+export function remove_popup(popup_handle) {
+    const popup = popups.get(popup_handle);
+    if (popup === undefined) {
+        return;
+    }
+    try {
+        popup.remove();
+    }
+    catch (error) {
+        log_bridge_error("remove_popup", error);
+    }
+    finally {
+        popups.delete(popup_handle);
+        untrack_popup(popup_handle);
     }
 }
 export function register_on_click(handle, cb) {
