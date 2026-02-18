@@ -92,6 +92,43 @@ pub fn unregister_on_layer_events_js(handle: MapHandle, layer_id: &str) {
     js::unregister_on_layer_events(handle, layer_id);
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn create_marker_js(handle: MapHandle, lng: f64, lat: f64, draggable: bool) -> Option<u32> {
+    js::create_marker(handle, lng, lat, draggable)
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn update_marker_js(marker_handle: u32, lng: f64, lat: f64, draggable: bool) {
+    js::update_marker(marker_handle, lng, lat, draggable);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn remove_marker_js(marker_handle: u32) {
+    js::remove_marker(marker_handle);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn create_popup_js(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    html: &str,
+    close_button: bool,
+    close_on_click: bool,
+) -> Option<u32> {
+    js::create_popup(handle, lng, lat, html, close_button, close_on_click)
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn update_popup_js(popup_handle: u32, lng: f64, lat: f64, html: &str) {
+    js::update_popup(popup_handle, lng, lat, html);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn remove_popup_js(popup_handle: u32) {
+    js::remove_popup(popup_handle);
+}
+
 #[cfg(test)]
 mod tests {
     use super::{

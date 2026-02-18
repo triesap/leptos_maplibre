@@ -49,9 +49,92 @@ pub(crate) fn unregister_on_layer_events(handle: MapHandle, layer_id: &str) {
     leptos_maplibre::unregister_on_layer_events_js(handle, layer_id);
 }
 
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn create_marker(handle: MapHandle, lng: f64, lat: f64, draggable: bool) -> Option<u32> {
+    leptos_maplibre::create_marker_js(handle, lng, lat, draggable)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn update_marker(marker_handle: u32, lng: f64, lat: f64, draggable: bool) {
+    leptos_maplibre::update_marker_js(marker_handle, lng, lat, draggable);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn remove_marker(marker_handle: u32) {
+    leptos_maplibre::remove_marker_js(marker_handle);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn create_popup(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    html: &str,
+    close_button: bool,
+    close_on_click: bool,
+) -> Option<u32> {
+    leptos_maplibre::create_popup_js(handle, lng, lat, html, close_button, close_on_click)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn update_popup(popup_handle: u32, lng: f64, lat: f64, html: &str) {
+    leptos_maplibre::update_popup_js(popup_handle, lng, lat, html);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn remove_popup(popup_handle: u32) {
+    leptos_maplibre::remove_popup_js(popup_handle);
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
 pub(crate) fn unregister_on_map_events(_handle: MapHandle) {}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn create_marker(
+    _handle: MapHandle,
+    _lng: f64,
+    _lat: f64,
+    _draggable: bool,
+) -> Option<u32> {
+    None
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn update_marker(_marker_handle: u32, _lng: f64, _lat: f64, _draggable: bool) {}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn remove_marker(_marker_handle: u32) {}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn create_popup(
+    _handle: MapHandle,
+    _lng: f64,
+    _lat: f64,
+    _html: &str,
+    _close_button: bool,
+    _close_on_click: bool,
+) -> Option<u32> {
+    None
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn update_popup(_popup_handle: u32, _lng: f64, _lat: f64, _html: &str) {}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn remove_popup(_popup_handle: u32) {}
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn parse_map_event_payload(payload: JsValue) -> Option<MapEvent> {

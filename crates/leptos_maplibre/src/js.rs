@@ -68,6 +68,36 @@ extern "C" {
         duration_ms: Option<u32>,
     ) -> Result<(), JsValue>;
 
+    #[wasm_bindgen(catch, js_name = create_marker)]
+    fn js_create_marker(handle: u32, lng: f64, lat: f64, draggable: bool) -> Result<u32, JsValue>;
+
+    #[wasm_bindgen(catch, js_name = update_marker)]
+    fn js_update_marker(
+        marker_handle: u32,
+        lng: f64,
+        lat: f64,
+        draggable: bool,
+    ) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = remove_marker)]
+    fn js_remove_marker(marker_handle: u32) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = create_popup)]
+    fn js_create_popup(
+        handle: u32,
+        lng: f64,
+        lat: f64,
+        html: &str,
+        close_button: bool,
+        close_on_click: bool,
+    ) -> Result<u32, JsValue>;
+
+    #[wasm_bindgen(catch, js_name = update_popup)]
+    fn js_update_popup(popup_handle: u32, lng: f64, lat: f64, html: &str) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = remove_popup)]
+    fn js_remove_popup(popup_handle: u32) -> Result<(), JsValue>;
+
     #[wasm_bindgen(catch, js_name = register_on_click)]
     fn js_register_on_click(handle: u32, cb: &js_sys::Function) -> Result<(), JsValue>;
 
@@ -267,6 +297,121 @@ pub(crate) fn set_style(handle: MapHandle, style_url: &str) {
     {
         let _ = handle;
         let _ = style_url;
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn create_marker(handle: MapHandle, lng: f64, lat: f64, draggable: bool) -> Option<u32> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        match js_create_marker(handle.0, lng, lat, draggable) {
+            Ok(marker_handle) if marker_handle != 0 => Some(marker_handle),
+            Ok(_) => None,
+            Err(error) => {
+                log_bridge_error("create_marker", error);
+                None
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = lng;
+        let _ = lat;
+        let _ = draggable;
+        None
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn update_marker(marker_handle: u32, lng: f64, lat: f64, draggable: bool) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_update_marker(marker_handle, lng, lat, draggable) {
+        log_bridge_error("update_marker", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = marker_handle;
+        let _ = lng;
+        let _ = lat;
+        let _ = draggable;
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn remove_marker(marker_handle: u32) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_remove_marker(marker_handle) {
+        log_bridge_error("remove_marker", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = marker_handle;
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn create_popup(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    html: &str,
+    close_button: bool,
+    close_on_click: bool,
+) -> Option<u32> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        match js_create_popup(handle.0, lng, lat, html, close_button, close_on_click) {
+            Ok(popup_handle) if popup_handle != 0 => Some(popup_handle),
+            Ok(_) => None,
+            Err(error) => {
+                log_bridge_error("create_popup", error);
+                None
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = lng;
+        let _ = lat;
+        let _ = html;
+        let _ = close_button;
+        let _ = close_on_click;
+        None
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn update_popup(popup_handle: u32, lng: f64, lat: f64, html: &str) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_update_popup(popup_handle, lng, lat, html) {
+        log_bridge_error("update_popup", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = popup_handle;
+        let _ = lng;
+        let _ = lat;
+        let _ = html;
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn remove_popup(popup_handle: u32) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_remove_popup(popup_handle) {
+        log_bridge_error("remove_popup", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = popup_handle;
     }
 }
 
