@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(module = "/frontend/src/map.ts")]
+#[wasm_bindgen(module = "/bindings/js/src/map.ts")]
 extern "C" {
     #[wasm_bindgen(catch, js_name = init_map)]
     fn js_init_map(container: &web_sys::HtmlElement, options: &JsValue) -> Result<u32, JsValue>;

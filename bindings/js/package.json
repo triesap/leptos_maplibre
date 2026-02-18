@@ -1,5 +1,5 @@
 {
-  "name": "leptos_maplibre-frontend",
+  "name": "leptos_maplibre-bindings-js",
   "private": true,
   "type": "module",
   "scripts": {
