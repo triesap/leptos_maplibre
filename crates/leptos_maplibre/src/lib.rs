@@ -71,3 +71,37 @@ pub fn set_feature_state(
 ) {
     js::set_feature_state(handle, source_id, source_layer, feature_id, state);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        add_geojson_source,
+        add_layer,
+        fly_to,
+        remove_layer,
+        remove_source,
+        set_feature_state,
+        set_style,
+        update_geojson_source,
+        MapHandle,
+    };
+    use serde_json::json;
+
+    #[test]
+    fn imperative_api_noop_on_host_target() {
+        let handle = MapHandle(404);
+        set_style(handle, "https://demotiles.maplibre.org/style.json");
+        fly_to(handle, 17.0, 59.0, Some(8.0), Some(500));
+        add_geojson_source(handle, "lots", &json!({"type":"FeatureCollection","features":[]}), None);
+        update_geojson_source(handle, "lots", &json!({"type":"FeatureCollection","features":[]}));
+        add_layer(
+            handle,
+            "lots-fill",
+            &json!({"id":"lots-fill","type":"fill","source":"lots"}),
+            None,
+        );
+        set_feature_state(handle, "lots", None, &json!("id-1"), &json!({"selected":true}));
+        remove_layer(handle, "lots-fill");
+        remove_source(handle, "lots");
+    }
+}
