@@ -4,7 +4,7 @@ import maplibregl, {
   type GeoJSONSourceSpecification,
   type LayerSpecification,
   type LngLatBoundsLike,
-  type Map,
+  type Map as MaplibreMap,
   type MapGeoJSONFeature,
   type MapLayerMouseEvent,
 } from "maplibre-gl";
@@ -54,18 +54,18 @@ type ClickCallback = (payload: MapClickPayload) => void;
 type LoadCallback = () => void;
 
 let next_id = 1;
-const maps = new Map<number, Map>();
-const observers = new Map<number, ResizeObserver>();
-const click_cbs = new Map<number, ClickCallback>();
-const load_cbs = new Map<number, LoadCallback>();
-const click_handlers = new Map<number, (event: MapLayerMouseEvent) => void>();
-const load_handlers = new Map<number, () => void>();
+const maps = new globalThis.Map<number, MaplibreMap>();
+const observers = new globalThis.Map<number, ResizeObserver>();
+const click_cbs = new globalThis.Map<number, ClickCallback>();
+const load_cbs = new globalThis.Map<number, LoadCallback>();
+const click_handlers = new globalThis.Map<number, (event: MapLayerMouseEvent) => void>();
+const load_handlers = new globalThis.Map<number, () => void>();
 
 function log_bridge_error(context: string, error: unknown): void {
   console.error(`leptos_maplibre ${context}:`, error);
 }
 
-function get_map(handle: number): Map | undefined {
+function get_map(handle: number): MaplibreMap | undefined {
   return maps.get(handle);
 }
 
@@ -115,7 +115,7 @@ function resolve_feature_id(feature_id: unknown): string | number | undefined {
   return undefined;
 }
 
-function apply_native_controls(map: Map, controls: NativeControlOptions | undefined): void {
+function apply_native_controls(map: MaplibreMap, controls: NativeControlOptions | undefined): void {
   if (controls === undefined) {
     return;
   }
@@ -137,7 +137,7 @@ function apply_native_controls(map: Map, controls: NativeControlOptions | undefi
 
   const geolocate_anchor = to_control_anchor(controls.geolocate);
   if (geolocate_anchor !== undefined) {
-    map.addControl(new maplibregl.GeolocateControl(), geolocate_anchor);
+    map.addControl(new maplibregl.GeolocateControl({}), geolocate_anchor);
   }
 
   const attribution_anchor = to_control_anchor(controls.attribution);
@@ -147,6 +147,9 @@ function apply_native_controls(map: Map, controls: NativeControlOptions | undefi
 }
 
 export function init_map(container: HTMLElement, options: MapInitOptions): number {
+  const canvas_context_attributes =
+    options.antialias === undefined ? undefined : { antialias: options.antialias };
+
   const map = new maplibregl.Map({
     container,
     style: options.style_url,
@@ -158,8 +161,8 @@ export function init_map(container: HTMLElement, options: MapInitOptions): numbe
     pitch: options.pitch,
     bearing: options.bearing,
     interactive: options.interactive,
-    attributionControl: options.attribution_control ?? false,
-    antialias: options.antialias,
+    attributionControl: options.attribution_control ? {} : false,
+    canvasContextAttributes: canvas_context_attributes,
   });
 
   apply_native_controls(map, options.native_controls);
