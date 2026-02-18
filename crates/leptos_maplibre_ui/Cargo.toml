@@ -13,6 +13,7 @@ path = "src/lib.rs"
 
 [dependencies]
 leptos = { workspace = true, features = ["csr"] }
+leptos_maplibre = { path = "../leptos_maplibre" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
