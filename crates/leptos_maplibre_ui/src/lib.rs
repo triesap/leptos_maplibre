@@ -15,5 +15,5 @@ pub use events::{
     MapViewState,
 };
 pub use map_events::MapEvents;
-pub use marker::MarkerProps;
-pub use popup::PopupProps;
+pub use marker::{Marker, MarkerProps};
+pub use popup::{Popup, PopupProps};
