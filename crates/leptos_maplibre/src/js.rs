@@ -85,6 +85,16 @@ extern "C" {
 
     #[wasm_bindgen(catch, js_name = unregister_on_map_events)]
     fn js_unregister_on_map_events(handle: u32) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = register_on_layer_events)]
+    fn js_register_on_layer_events(
+        handle: u32,
+        layer_id: &str,
+        cb: &js_sys::Function,
+    ) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = unregister_on_layer_events)]
+    fn js_unregister_on_layer_events(handle: u32, layer_id: &str) -> Result<(), JsValue>;
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -201,6 +211,24 @@ pub(crate) fn register_on_map_events(handle: MapHandle, callback: &js_sys::Funct
 pub(crate) fn unregister_on_map_events(handle: MapHandle) {
     if let Err(error) = js_unregister_on_map_events(handle.0) {
         log_bridge_error("unregister_on_map_events", error);
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn register_on_layer_events(
+    handle: MapHandle,
+    layer_id: &str,
+    callback: &js_sys::Function,
+) {
+    if let Err(error) = js_register_on_layer_events(handle.0, layer_id, callback) {
+        log_bridge_error("register_on_layer_events", error);
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn unregister_on_layer_events(handle: MapHandle, layer_id: &str) {
+    if let Err(error) = js_unregister_on_layer_events(handle.0, layer_id) {
+        log_bridge_error("unregister_on_layer_events", error);
     }
 }
 

@@ -82,6 +82,16 @@ pub fn unregister_on_map_events_js(handle: MapHandle) {
     js::unregister_on_map_events(handle);
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn register_on_layer_events_js(handle: MapHandle, layer_id: &str, callback: &js_sys::Function) {
+    js::register_on_layer_events(handle, layer_id, callback);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn unregister_on_layer_events_js(handle: MapHandle, layer_id: &str) {
+    js::unregister_on_layer_events(handle, layer_id);
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
