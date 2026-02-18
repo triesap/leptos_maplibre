@@ -1,0 +1,14 @@
+{
+  "name": "leptos_maplibre-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "maplibre-gl": "^5.13.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
