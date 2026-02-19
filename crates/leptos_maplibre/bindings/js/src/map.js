@@ -613,6 +613,64 @@ export function remove_layer(handle, layer_id) {
         log_bridge_error("remove_layer", error);
     }
 }
+export function set_layout_property(handle, layer_id, property_name, value) {
+    const map = get_map(handle);
+    if (map === undefined || map.getLayer(layer_id) === undefined) {
+        return;
+    }
+    if (typeof property_name !== "string" || property_name === "") {
+        return;
+    }
+    try {
+        map.setLayoutProperty(layer_id, property_name, value);
+    }
+    catch (error) {
+        log_bridge_error("set_layout_property", error);
+    }
+}
+export function set_paint_property(handle, layer_id, property_name, value) {
+    const map = get_map(handle);
+    if (map === undefined || map.getLayer(layer_id) === undefined) {
+        return;
+    }
+    if (typeof property_name !== "string" || property_name === "") {
+        return;
+    }
+    try {
+        map.setPaintProperty(layer_id, property_name, value);
+    }
+    catch (error) {
+        log_bridge_error("set_paint_property", error);
+    }
+}
+export function set_filter(handle, layer_id, filter) {
+    const map = get_map(handle);
+    if (map === undefined || map.getLayer(layer_id) === undefined) {
+        return;
+    }
+    try {
+        map.setFilter(layer_id, filter ?? null);
+    }
+    catch (error) {
+        log_bridge_error("set_filter", error);
+    }
+}
+export function set_layer_zoom_range(handle, layer_id, min_zoom, max_zoom) {
+    const map = get_map(handle);
+    const layer = map?.getLayer(layer_id);
+    if (map === undefined || layer === undefined) {
+        return;
+    }
+    const resolved_min_zoom = to_finite_number(min_zoom) ?? layer.minzoom ?? 0;
+    const raw_max_zoom = to_finite_number(max_zoom) ?? layer.maxzoom ?? 24;
+    const resolved_max_zoom = raw_max_zoom < resolved_min_zoom ? resolved_min_zoom : raw_max_zoom;
+    try {
+        map.setLayerZoomRange(layer_id, resolved_min_zoom, resolved_max_zoom);
+    }
+    catch (error) {
+        log_bridge_error("set_layer_zoom_range", error);
+    }
+}
 export function set_feature_state(handle, source_id, source_layer, feature_id, state) {
     const map = get_map(handle);
     if (map === undefined) {

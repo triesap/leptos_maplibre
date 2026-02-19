@@ -53,6 +53,33 @@ extern "C" {
     #[wasm_bindgen(catch, js_name = remove_layer)]
     fn js_remove_layer(handle: u32, layer_id: &str) -> Result<(), JsValue>;
 
+    #[wasm_bindgen(catch, js_name = set_layout_property)]
+    fn js_set_layout_property(
+        handle: u32,
+        layer_id: &str,
+        property_name: &str,
+        value: &JsValue,
+    ) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = set_paint_property)]
+    fn js_set_paint_property(
+        handle: u32,
+        layer_id: &str,
+        property_name: &str,
+        value: &JsValue,
+    ) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = set_filter)]
+    fn js_set_filter(handle: u32, layer_id: &str, filter: &JsValue) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = set_layer_zoom_range)]
+    fn js_set_layer_zoom_range(
+        handle: u32,
+        layer_id: &str,
+        min_zoom: Option<f64>,
+        max_zoom: Option<f64>,
+    ) -> Result<(), JsValue>;
+
     #[wasm_bindgen(catch, js_name = set_feature_state)]
     fn js_set_feature_state(
         handle: u32,
@@ -678,6 +705,100 @@ pub(crate) fn remove_layer(handle: MapHandle, layer_id: &str) {
     {
         let _ = handle;
         let _ = layer_id;
+    }
+}
+
+pub(crate) fn set_layout_property(
+    handle: MapHandle,
+    layer_id: &str,
+    property_name: &str,
+    value: &serde_json::Value,
+) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let Some(value) = parse_json(value, "set_layout_property_parse") else {
+            return;
+        };
+        if let Err(error) = js_set_layout_property(handle.0, layer_id, property_name, &value) {
+            log_bridge_error("set_layout_property", error);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = layer_id;
+        let _ = property_name;
+        let _ = value;
+    }
+}
+
+pub(crate) fn set_paint_property(
+    handle: MapHandle,
+    layer_id: &str,
+    property_name: &str,
+    value: &serde_json::Value,
+) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let Some(value) = parse_json(value, "set_paint_property_parse") else {
+            return;
+        };
+        if let Err(error) = js_set_paint_property(handle.0, layer_id, property_name, &value) {
+            log_bridge_error("set_paint_property", error);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = layer_id;
+        let _ = property_name;
+        let _ = value;
+    }
+}
+
+pub(crate) fn set_filter(handle: MapHandle, layer_id: &str, filter: Option<&serde_json::Value>) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let filter = if let Some(filter) = filter {
+            let Some(filter) = parse_json(filter, "set_filter_parse") else {
+                return;
+            };
+            filter
+        } else {
+            JsValue::NULL
+        };
+        if let Err(error) = js_set_filter(handle.0, layer_id, &filter) {
+            log_bridge_error("set_filter", error);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = layer_id;
+        let _ = filter;
+    }
+}
+
+pub(crate) fn set_layer_zoom_range(
+    handle: MapHandle,
+    layer_id: &str,
+    min_zoom: Option<f64>,
+    max_zoom: Option<f64>,
+) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_set_layer_zoom_range(handle.0, layer_id, min_zoom, max_zoom) {
+        log_bridge_error("set_layer_zoom_range", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = layer_id;
+        let _ = min_zoom;
+        let _ = max_zoom;
     }
 }
 

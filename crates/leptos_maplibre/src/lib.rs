@@ -138,6 +138,37 @@ pub fn remove_layer(handle: MapHandle, layer_id: &str) {
     js::remove_layer(handle, layer_id);
 }
 
+pub fn set_layout_property(
+    handle: MapHandle,
+    layer_id: &str,
+    property_name: &str,
+    value: &serde_json::Value,
+) {
+    js::set_layout_property(handle, layer_id, property_name, value);
+}
+
+pub fn set_paint_property(
+    handle: MapHandle,
+    layer_id: &str,
+    property_name: &str,
+    value: &serde_json::Value,
+) {
+    js::set_paint_property(handle, layer_id, property_name, value);
+}
+
+pub fn set_filter(handle: MapHandle, layer_id: &str, filter: Option<&serde_json::Value>) {
+    js::set_filter(handle, layer_id, filter);
+}
+
+pub fn set_layer_zoom_range(
+    handle: MapHandle,
+    layer_id: &str,
+    min_zoom: Option<f64>,
+    max_zoom: Option<f64>,
+) {
+    js::set_layer_zoom_range(handle, layer_id, min_zoom, max_zoom);
+}
+
 pub fn set_feature_state(
     handle: MapHandle,
     source_id: &str,
@@ -210,7 +241,8 @@ mod tests {
     use super::{
         MapHandle, add_canvas_source, add_geojson_source, add_image_source, add_layer,
         add_raster_source, add_source, add_vector_source, add_video_source, ease_to, fit_bounds,
-        fly_to, jump_to, remove_layer, remove_source, set_feature_state, set_style,
+        fly_to, jump_to, remove_layer, remove_source, set_feature_state, set_filter,
+        set_layer_zoom_range, set_layout_property, set_paint_property, set_style,
         update_geojson_source,
     };
     use serde_json::json;
@@ -287,6 +319,10 @@ mod tests {
             &json!({"id":"lots-fill","type":"fill","source":"lots"}),
             None,
         );
+        set_layout_property(handle, "lots-fill", "visibility", &json!("visible"));
+        set_paint_property(handle, "lots-fill", "fill-opacity", &json!(0.5));
+        set_filter(handle, "lots-fill", Some(&json!(["==", ["get", "lot"], "SE-1"])));
+        set_layer_zoom_range(handle, "lots-fill", Some(2.0), Some(12.0));
         set_feature_state(
             handle,
             "lots",
