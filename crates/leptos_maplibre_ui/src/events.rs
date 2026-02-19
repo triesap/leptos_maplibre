@@ -171,4 +171,44 @@ mod tests {
             serde_json::from_str(&encoded).expect("deserialize popup lifecycle event");
         assert_eq!(decoded, event);
     }
+
+    #[test]
+    fn map_error_event_deserialize_with_message() {
+        let payload = json!({
+            "kind": "error",
+            "view": {
+                "center_lng": 11.0,
+                "center_lat": 57.0,
+                "zoom": 5.0,
+                "bearing": 0.0,
+                "pitch": 0.0
+            },
+            "message": "tile request failed"
+        });
+
+        let decoded: MapEvent = serde_json::from_value(payload).expect("deserialize map error event");
+        assert_eq!(decoded.kind, MapEventKind::Error);
+        assert_eq!(decoded.message.as_deref(), Some("tile request failed"));
+    }
+
+    #[test]
+    fn layer_mouse_over_event_roundtrip() {
+        let event = LayerEvent {
+            kind: LayerEventKind::MouseOver,
+            layer_id: "lots-fill".to_string(),
+            lng: 11.2,
+            lat: 58.9,
+            screen_x: 400.0,
+            screen_y: 220.0,
+            features: vec![LayerFeatureHit {
+                layer_id: "lots-fill".to_string(),
+                properties: json!({"lot":"SE-124"}),
+            }],
+        };
+
+        let encoded = serde_json::to_string(&event).expect("serialize layer mouse over event");
+        let decoded: LayerEvent =
+            serde_json::from_str(&encoded).expect("deserialize layer mouse over event");
+        assert_eq!(decoded, event);
+    }
 }
