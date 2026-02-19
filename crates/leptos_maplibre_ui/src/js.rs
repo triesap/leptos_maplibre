@@ -1,7 +1,7 @@
 use leptos_maplibre::MapHandle;
 
 #[cfg(target_arch = "wasm32")]
-use crate::events::{LayerEvent, MapEvent};
+use crate::events::{LayerEvent, MapEvent, MarkerDragEvent};
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
@@ -14,6 +14,14 @@ pub(crate) type MapEventClosure = wasm_bindgen::closure::Closure<dyn FnMut(JsVal
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
 pub(crate) type LayerEventClosure = wasm_bindgen::closure::Closure<dyn FnMut(JsValue)>;
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) type MarkerDragClosure = wasm_bindgen::closure::Closure<dyn FnMut(JsValue)>;
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) type MarkerDragClosure = ();
 
 #[cfg(target_arch = "wasm32")]
 fn log_bridge_error(context: &str, error: JsValue) {
@@ -51,20 +59,64 @@ pub(crate) fn unregister_on_layer_events(handle: MapHandle, layer_id: &str) {
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
-pub(crate) fn create_marker(handle: MapHandle, lng: f64, lat: f64, draggable: bool) -> Option<u32> {
-    leptos_maplibre::create_marker_js(handle, lng, lat, draggable)
+pub(crate) fn create_marker(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    draggable: bool,
+    anchor: Option<&str>,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    rotation: Option<f64>,
+) -> Option<u32> {
+    leptos_maplibre::create_marker_js(
+        handle, lng, lat, draggable, anchor, offset_x, offset_y, rotation,
+    )
 }
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
-pub(crate) fn update_marker(marker_handle: u32, lng: f64, lat: f64, draggable: bool) {
-    leptos_maplibre::update_marker_js(marker_handle, lng, lat, draggable);
+pub(crate) fn update_marker(
+    marker_handle: u32,
+    lng: f64,
+    lat: f64,
+    draggable: bool,
+    anchor: Option<&str>,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    rotation: Option<f64>,
+) {
+    leptos_maplibre::update_marker_js(
+        marker_handle,
+        lng,
+        lat,
+        draggable,
+        anchor,
+        offset_x,
+        offset_y,
+        rotation,
+    );
 }
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
 pub(crate) fn remove_marker(marker_handle: u32) {
     leptos_maplibre::remove_marker_js(marker_handle);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn register_on_marker_drag_events(
+    marker_handle: u32,
+    callback: &MarkerDragClosure,
+) {
+    leptos_maplibre::register_on_marker_drag_events_js(marker_handle, callback.as_ref().unchecked_ref());
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn unregister_on_marker_drag_events(marker_handle: u32) {
+    leptos_maplibre::unregister_on_marker_drag_events_js(marker_handle);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -114,6 +166,14 @@ pub(crate) fn update_marker(_marker_handle: u32, _lng: f64, _lat: f64, _draggabl
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
 pub(crate) fn remove_marker(_marker_handle: u32) {}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn register_on_marker_drag_events(_marker_handle: u32, _callback: &MarkerDragClosure) {}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn unregister_on_marker_drag_events(_marker_handle: u32) {}
 
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
@@ -190,6 +250,37 @@ pub(crate) fn parse_layer_event_payload(payload: JsValue) -> Option<LayerEvent> 
         Err(error) => {
             log_bridge_error(
                 "parse_layer_event_payload_decode",
+                JsValue::from_str(&error.to_string()),
+            );
+            None
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn parse_marker_drag_event_payload(payload: JsValue) -> Option<MarkerDragEvent> {
+    let json_text = match js_sys::JSON::stringify(&payload) {
+        Ok(json_text) => json_text,
+        Err(error) => {
+            log_bridge_error("parse_marker_drag_event_payload_stringify", error);
+            return None;
+        }
+    };
+
+    let Some(json_text) = json_text.as_string() else {
+        log_bridge_error(
+            "parse_marker_drag_event_payload_stringify",
+            JsValue::from_str("stringify produced non-string"),
+        );
+        return None;
+    };
+
+    match serde_json::from_str::<MarkerDragEvent>(&json_text) {
+        Ok(event) => Some(event),
+        Err(error) => {
+            log_bridge_error(
+                "parse_marker_drag_event_payload_decode",
                 JsValue::from_str(&error.to_string()),
             );
             None

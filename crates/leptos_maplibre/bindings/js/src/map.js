@@ -7,6 +7,8 @@ const observers = new globalThis.Map();
 const markers = new globalThis.Map();
 const marker_maps = new globalThis.Map();
 const map_markers = new globalThis.Map();
+const marker_drag_event_cbs = new globalThis.Map();
+const marker_drag_event_handlers = new globalThis.Map();
 const popups = new globalThis.Map();
 const popup_maps = new globalThis.Map();
 const map_popups = new globalThis.Map();
@@ -161,6 +163,17 @@ function untrack_marker(marker_handle) {
     if (marker_set.size === 0) {
         map_markers.delete(handle);
     }
+}
+function detach_marker_drag_events(marker_handle) {
+    const marker = markers.get(marker_handle);
+    const handlers = marker_drag_event_handlers.get(marker_handle);
+    if (marker !== undefined && handlers !== undefined) {
+        marker.off("dragstart", handlers.dragstart);
+        marker.off("drag", handlers.drag);
+        marker.off("dragend", handlers.dragend);
+    }
+    marker_drag_event_handlers.delete(marker_handle);
+    marker_drag_event_cbs.delete(marker_handle);
 }
 function track_popup(handle, popup_handle) {
     const existing = map_popups.get(handle);
@@ -436,6 +449,7 @@ export function destroy_map(handle) {
                 continue;
             }
             try {
+                detach_marker_drag_events(marker_handle);
                 marker.remove();
             }
             catch (error) {
@@ -785,13 +799,38 @@ export function fit_bounds(handle, west, south, east, north, padding, duration_m
         log_bridge_error("fit_bounds", error);
     }
 }
-export function create_marker(handle, lng, lat, draggable) {
+export function create_marker(
+    handle,
+    lng,
+    lat,
+    draggable,
+    anchor,
+    offset_x,
+    offset_y,
+    rotation,
+) {
     const map = get_map(handle);
     if (map === undefined) {
         return 0;
     }
     try {
-        const marker = new maplibregl.Marker({ draggable: draggable === true })
+        const marker_options = {
+            draggable: draggable === true,
+        };
+        const marker_anchor = to_control_anchor(anchor);
+        if (marker_anchor !== undefined) {
+            marker_options.anchor = marker_anchor;
+        }
+        const resolved_offset_x = to_finite_number(offset_x);
+        const resolved_offset_y = to_finite_number(offset_y);
+        if (resolved_offset_x !== undefined && resolved_offset_y !== undefined) {
+            marker_options.offset = [resolved_offset_x, resolved_offset_y];
+        }
+        const marker_rotation = to_finite_number(rotation);
+        if (marker_rotation !== undefined) {
+            marker_options.rotation = marker_rotation;
+        }
+        const marker = new maplibregl.Marker(marker_options)
             .setLngLat([lng, lat])
             .addTo(map);
         const marker_handle = next_marker_id;
@@ -805,7 +844,16 @@ export function create_marker(handle, lng, lat, draggable) {
         return 0;
     }
 }
-export function update_marker(marker_handle, lng, lat, draggable) {
+export function update_marker(
+    marker_handle,
+    lng,
+    lat,
+    draggable,
+    anchor,
+    offset_x,
+    offset_y,
+    rotation,
+) {
     const marker = markers.get(marker_handle);
     if (marker === undefined) {
         return;
@@ -813,6 +861,21 @@ export function update_marker(marker_handle, lng, lat, draggable) {
     try {
         marker.setLngLat([lng, lat]);
         marker.setDraggable(draggable === true);
+        const marker_anchor = to_control_anchor(anchor);
+        if (marker_anchor !== undefined && typeof marker.setAnchor === "function") {
+            marker.setAnchor(marker_anchor);
+        }
+        const resolved_offset_x = to_finite_number(offset_x);
+        const resolved_offset_y = to_finite_number(offset_y);
+        if (resolved_offset_x !== undefined &&
+            resolved_offset_y !== undefined &&
+            typeof marker.setOffset === "function") {
+            marker.setOffset([resolved_offset_x, resolved_offset_y]);
+        }
+        const marker_rotation = to_finite_number(rotation);
+        if (marker_rotation !== undefined && typeof marker.setRotation === "function") {
+            marker.setRotation(marker_rotation);
+        }
     }
     catch (error) {
         log_bridge_error("update_marker", error);
@@ -830,9 +893,44 @@ export function remove_marker(marker_handle) {
         log_bridge_error("remove_marker", error);
     }
     finally {
+        detach_marker_drag_events(marker_handle);
         markers.delete(marker_handle);
         untrack_marker(marker_handle);
     }
+}
+function emit_marker_drag_event(marker_handle, kind) {
+    const marker = markers.get(marker_handle);
+    const callback = marker_drag_event_cbs.get(marker_handle);
+    if (marker === undefined || callback === undefined) {
+        return;
+    }
+    const lng_lat = marker.getLngLat();
+    callback({
+        kind,
+        lng: lng_lat.lng,
+        lat: lng_lat.lat,
+    });
+}
+export function register_on_marker_drag_events(marker_handle, cb) {
+    const marker = markers.get(marker_handle);
+    if (marker === undefined) {
+        return;
+    }
+    marker_drag_event_cbs.set(marker_handle, cb);
+    detach_marker_drag_events(marker_handle);
+    marker_drag_event_cbs.set(marker_handle, cb);
+    const handlers = {
+        dragstart: () => emit_marker_drag_event(marker_handle, "drag_start"),
+        drag: () => emit_marker_drag_event(marker_handle, "drag"),
+        dragend: () => emit_marker_drag_event(marker_handle, "drag_end"),
+    };
+    marker_drag_event_handlers.set(marker_handle, handlers);
+    marker.on("dragstart", handlers.dragstart);
+    marker.on("drag", handlers.drag);
+    marker.on("dragend", handlers.dragend);
+}
+export function unregister_on_marker_drag_events(marker_handle) {
+    detach_marker_drag_events(marker_handle);
 }
 export function create_popup(handle, lng, lat, html, close_button, close_on_click) {
     const map = get_map(handle);

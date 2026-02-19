@@ -132,7 +132,16 @@ extern "C" {
     ) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = create_marker)]
-    fn js_create_marker(handle: u32, lng: f64, lat: f64, draggable: bool) -> Result<u32, JsValue>;
+    fn js_create_marker(
+        handle: u32,
+        lng: f64,
+        lat: f64,
+        draggable: bool,
+        anchor: Option<&str>,
+        offset_x: Option<f64>,
+        offset_y: Option<f64>,
+        rotation: Option<f64>,
+    ) -> Result<u32, JsValue>;
 
     #[wasm_bindgen(catch, js_name = update_marker)]
     fn js_update_marker(
@@ -140,10 +149,21 @@ extern "C" {
         lng: f64,
         lat: f64,
         draggable: bool,
+        anchor: Option<&str>,
+        offset_x: Option<f64>,
+        offset_y: Option<f64>,
+        rotation: Option<f64>,
     ) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = remove_marker)]
     fn js_remove_marker(marker_handle: u32) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = register_on_marker_drag_events)]
+    fn js_register_on_marker_drag_events(marker_handle: u32, cb: &js_sys::Function)
+        -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = unregister_on_marker_drag_events)]
+    fn js_unregister_on_marker_drag_events(marker_handle: u32) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = create_popup)]
     fn js_create_popup(
@@ -367,10 +387,21 @@ pub(crate) fn set_style(handle: MapHandle, style_url: &str) {
 }
 
 #[allow(dead_code)]
-pub(crate) fn create_marker(handle: MapHandle, lng: f64, lat: f64, draggable: bool) -> Option<u32> {
+pub(crate) fn create_marker(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    draggable: bool,
+    anchor: Option<&str>,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    rotation: Option<f64>,
+) -> Option<u32> {
     #[cfg(target_arch = "wasm32")]
     {
-        match js_create_marker(handle.0, lng, lat, draggable) {
+        match js_create_marker(
+            handle.0, lng, lat, draggable, anchor, offset_x, offset_y, rotation,
+        ) {
             Ok(marker_handle) if marker_handle != 0 => Some(marker_handle),
             Ok(_) => None,
             Err(error) => {
@@ -386,14 +417,36 @@ pub(crate) fn create_marker(handle: MapHandle, lng: f64, lat: f64, draggable: bo
         let _ = lng;
         let _ = lat;
         let _ = draggable;
+        let _ = anchor;
+        let _ = offset_x;
+        let _ = offset_y;
+        let _ = rotation;
         None
     }
 }
 
 #[allow(dead_code)]
-pub(crate) fn update_marker(marker_handle: u32, lng: f64, lat: f64, draggable: bool) {
+pub(crate) fn update_marker(
+    marker_handle: u32,
+    lng: f64,
+    lat: f64,
+    draggable: bool,
+    anchor: Option<&str>,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    rotation: Option<f64>,
+) {
     #[cfg(target_arch = "wasm32")]
-    if let Err(error) = js_update_marker(marker_handle, lng, lat, draggable) {
+    if let Err(error) = js_update_marker(
+        marker_handle,
+        lng,
+        lat,
+        draggable,
+        anchor,
+        offset_x,
+        offset_y,
+        rotation,
+    ) {
         log_bridge_error("update_marker", error);
     }
 
@@ -403,6 +456,10 @@ pub(crate) fn update_marker(marker_handle: u32, lng: f64, lat: f64, draggable: b
         let _ = lng;
         let _ = lat;
         let _ = draggable;
+        let _ = anchor;
+        let _ = offset_x;
+        let _ = offset_y;
+        let _ = rotation;
     }
 }
 
@@ -411,6 +468,32 @@ pub(crate) fn remove_marker(marker_handle: u32) {
     #[cfg(target_arch = "wasm32")]
     if let Err(error) = js_remove_marker(marker_handle) {
         log_bridge_error("remove_marker", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = marker_handle;
+    }
+}
+
+#[allow(dead_code)]
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn register_on_marker_drag_events(marker_handle: u32, callback: &js_sys::Function) {
+    if let Err(error) = js_register_on_marker_drag_events(marker_handle, callback) {
+        log_bridge_error("register_on_marker_drag_events", error);
+    }
+}
+
+#[allow(dead_code)]
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn register_on_marker_drag_events(_marker_handle: u32, _callback: &()) {
+}
+
+#[allow(dead_code)]
+pub(crate) fn unregister_on_marker_drag_events(marker_handle: u32) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_unregister_on_marker_drag_events(marker_handle) {
+        log_bridge_error("unregister_on_marker_drag_events", error);
     }
 
     #[cfg(not(target_arch = "wasm32"))]

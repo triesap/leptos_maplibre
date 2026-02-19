@@ -34,6 +34,14 @@ pub enum LayerEventKind {
     MouseLeave,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MarkerDragEventKind {
+    DragStart,
+    Drag,
+    DragEnd,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MapViewState {
     pub center_lng: f64,
@@ -68,9 +76,19 @@ pub struct LayerEvent {
     pub features: Vec<LayerFeatureHit>,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct MarkerDragEvent {
+    pub kind: MarkerDragEventKind,
+    pub lng: f64,
+    pub lat: f64,
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{LayerEvent, LayerEventKind, LayerFeatureHit, MapEvent, MapEventKind, MapViewState};
+    use super::{
+        LayerEvent, LayerEventKind, LayerFeatureHit, MapEvent, MapEventKind, MapViewState,
+        MarkerDragEvent, MarkerDragEventKind,
+    };
     use serde_json::json;
 
     #[test]
@@ -109,6 +127,20 @@ mod tests {
 
         let encoded = serde_json::to_string(&event).expect("serialize layer event");
         let decoded: LayerEvent = serde_json::from_str(&encoded).expect("deserialize layer event");
+        assert_eq!(decoded, event);
+    }
+
+    #[test]
+    fn marker_drag_event_roundtrip() {
+        let event = MarkerDragEvent {
+            kind: MarkerDragEventKind::DragEnd,
+            lng: 12.0,
+            lat: 57.5,
+        };
+
+        let encoded = serde_json::to_string(&event).expect("serialize marker drag event");
+        let decoded: MarkerDragEvent =
+            serde_json::from_str(&encoded).expect("deserialize marker drag event");
         assert_eq!(decoded, event);
     }
 }

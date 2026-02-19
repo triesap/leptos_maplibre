@@ -10,6 +10,8 @@ pub use events::{
     LayerEvent,
     LayerEventKind,
     LayerFeatureHit,
+    MarkerDragEvent,
+    MarkerDragEventKind,
     MapEvent,
     MapEventKind,
     MapViewState,

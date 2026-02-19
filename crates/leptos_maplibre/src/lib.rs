@@ -200,18 +200,57 @@ pub fn unregister_on_layer_events_js(handle: MapHandle, layer_id: &str) {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn create_marker_js(handle: MapHandle, lng: f64, lat: f64, draggable: bool) -> Option<u32> {
-    js::create_marker(handle, lng, lat, draggable)
+pub fn create_marker_js(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    draggable: bool,
+    anchor: Option<&str>,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    rotation: Option<f64>,
+) -> Option<u32> {
+    js::create_marker(
+        handle, lng, lat, draggable, anchor, offset_x, offset_y, rotation,
+    )
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn update_marker_js(marker_handle: u32, lng: f64, lat: f64, draggable: bool) {
-    js::update_marker(marker_handle, lng, lat, draggable);
+pub fn update_marker_js(
+    marker_handle: u32,
+    lng: f64,
+    lat: f64,
+    draggable: bool,
+    anchor: Option<&str>,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    rotation: Option<f64>,
+) {
+    js::update_marker(
+        marker_handle,
+        lng,
+        lat,
+        draggable,
+        anchor,
+        offset_x,
+        offset_y,
+        rotation,
+    );
 }
 
 #[cfg(target_arch = "wasm32")]
 pub fn remove_marker_js(marker_handle: u32) {
     js::remove_marker(marker_handle);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_on_marker_drag_events_js(marker_handle: u32, callback: &js_sys::Function) {
+    js::register_on_marker_drag_events(marker_handle, callback);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn unregister_on_marker_drag_events_js(marker_handle: u32) {
+    js::unregister_on_marker_drag_events(marker_handle);
 }
 
 #[cfg(target_arch = "wasm32")]
