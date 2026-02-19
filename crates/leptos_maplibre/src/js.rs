@@ -29,6 +29,9 @@ extern "C" {
         promote_id: Option<&str>,
     ) -> Result<(), JsValue>;
 
+    #[wasm_bindgen(catch, js_name = add_source)]
+    fn js_add_source(handle: u32, source_id: &str, source_spec: &JsValue) -> Result<(), JsValue>;
+
     #[wasm_bindgen(catch, js_name = update_geojson_source)]
     fn js_update_geojson_source(
         handle: u32,
@@ -582,6 +585,25 @@ pub(crate) fn add_geojson_source(
         let _ = source_id;
         let _ = geojson;
         let _ = promote_id;
+    }
+}
+
+pub(crate) fn add_source(handle: MapHandle, source_id: &str, source_spec: &serde_json::Value) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let Some(source_spec) = parse_json(source_spec, "add_source_parse") else {
+            return;
+        };
+        if let Err(error) = js_add_source(handle.0, source_id, &source_spec) {
+            log_bridge_error("add_source", error);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = source_id;
+        let _ = source_spec;
     }
 }
 

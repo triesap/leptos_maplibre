@@ -503,6 +503,28 @@ export function set_style(handle, style_url) {
         log_bridge_error("set_style", error);
     }
 }
+export function add_source(handle, source_id, source_spec) {
+    const map = get_map(handle);
+    if (map === undefined) {
+        return;
+    }
+    if (typeof source_spec !== "object" || source_spec === null) {
+        return;
+    }
+    const source_type = source_spec.type;
+    if (typeof source_type !== "string" || source_type === "") {
+        return;
+    }
+    try {
+        if (map.getSource(source_id) !== undefined) {
+            map.removeSource(source_id);
+        }
+        map.addSource(source_id, source_spec);
+    }
+    catch (error) {
+        log_bridge_error("add_source", error);
+    }
+}
 export function add_geojson_source(handle, source_id, geojson, promote_id) {
     const map = get_map(handle);
     if (map === undefined) {

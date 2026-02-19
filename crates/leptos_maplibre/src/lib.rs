@@ -71,6 +71,52 @@ pub fn add_geojson_source(
     js::add_geojson_source(handle, source_id, geojson, promote_id);
 }
 
+pub fn add_source(handle: MapHandle, source_id: &str, source_spec: &serde_json::Value) {
+    js::add_source(handle, source_id, source_spec);
+}
+
+fn with_source_type(
+    source_type: &'static str,
+    source_spec: &serde_json::Value,
+) -> Option<serde_json::Value> {
+    let mut source_object = source_spec.as_object()?.clone();
+    source_object.insert(
+        "type".to_string(),
+        serde_json::Value::String(source_type.to_string()),
+    );
+    Some(serde_json::Value::Object(source_object))
+}
+
+pub fn add_vector_source(handle: MapHandle, source_id: &str, source_spec: &serde_json::Value) {
+    if let Some(source_spec) = with_source_type("vector", source_spec) {
+        js::add_source(handle, source_id, &source_spec);
+    }
+}
+
+pub fn add_raster_source(handle: MapHandle, source_id: &str, source_spec: &serde_json::Value) {
+    if let Some(source_spec) = with_source_type("raster", source_spec) {
+        js::add_source(handle, source_id, &source_spec);
+    }
+}
+
+pub fn add_image_source(handle: MapHandle, source_id: &str, source_spec: &serde_json::Value) {
+    if let Some(source_spec) = with_source_type("image", source_spec) {
+        js::add_source(handle, source_id, &source_spec);
+    }
+}
+
+pub fn add_video_source(handle: MapHandle, source_id: &str, source_spec: &serde_json::Value) {
+    if let Some(source_spec) = with_source_type("video", source_spec) {
+        js::add_source(handle, source_id, &source_spec);
+    }
+}
+
+pub fn add_canvas_source(handle: MapHandle, source_id: &str, source_spec: &serde_json::Value) {
+    if let Some(source_spec) = with_source_type("canvas", source_spec) {
+        js::add_source(handle, source_id, &source_spec);
+    }
+}
+
 pub fn update_geojson_source(handle: MapHandle, source_id: &str, geojson: &serde_json::Value) {
     js::update_geojson_source(handle, source_id, geojson);
 }
@@ -162,8 +208,10 @@ pub fn remove_popup_js(popup_handle: u32) {
 #[cfg(test)]
 mod tests {
     use super::{
-        MapHandle, add_geojson_source, add_layer, ease_to, fit_bounds, fly_to, jump_to,
-        remove_layer, remove_source, set_feature_state, set_style, update_geojson_source,
+        MapHandle, add_canvas_source, add_geojson_source, add_image_source, add_layer,
+        add_raster_source, add_source, add_vector_source, add_video_source, ease_to, fit_bounds,
+        fly_to, jump_to, remove_layer, remove_source, set_feature_state, set_style,
+        update_geojson_source,
     };
     use serde_json::json;
 
@@ -191,6 +239,36 @@ mod tests {
             Some(24.0),
             Some(600),
             Some(10.0),
+        );
+        add_source(
+            handle,
+            "custom-source",
+            &json!({"type":"vector","tiles":["https://example.com/{z}/{x}/{y}.pbf"]}),
+        );
+        add_vector_source(
+            handle,
+            "lots-vector",
+            &json!({"tiles":["https://example.com/vector/{z}/{x}/{y}.pbf"],"minzoom":0.0,"maxzoom":14.0}),
+        );
+        add_raster_source(
+            handle,
+            "lots-raster",
+            &json!({"tiles":["https://example.com/raster/{z}/{x}/{y}.png"],"tileSize":256}),
+        );
+        add_image_source(
+            handle,
+            "overlay-image",
+            &json!({"url":"https://example.com/overlay.png","coordinates":[[16.0,60.0],[18.0,60.0],[18.0,58.0],[16.0,58.0]]}),
+        );
+        add_video_source(
+            handle,
+            "overlay-video",
+            &json!({"urls":["https://example.com/overlay.mp4"],"coordinates":[[16.0,60.0],[18.0,60.0],[18.0,58.0],[16.0,58.0]]}),
+        );
+        add_canvas_source(
+            handle,
+            "overlay-canvas",
+            &json!({"canvas":"heatmap","coordinates":[[16.0,60.0],[18.0,60.0],[18.0,58.0],[16.0,58.0]],"animate":true}),
         );
         add_geojson_source(
             handle,
