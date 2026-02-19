@@ -31,6 +31,9 @@ function is_nil(value) {
 function optional(value) {
     return is_nil(value) ? undefined : value;
 }
+function to_boolean(value) {
+    return typeof value === "boolean" ? value : undefined;
+}
 function to_finite_number(value) {
     if (typeof value === "number" && Number.isFinite(value)) {
         return value;
@@ -238,6 +241,11 @@ export function init_map(container, options) {
     const max_zoom = raw_max_zoom !== undefined && min_zoom !== undefined && raw_max_zoom < min_zoom
         ? min_zoom
         : raw_max_zoom;
+    const min_pitch = to_finite_number(options.min_pitch);
+    const raw_max_pitch = to_finite_number(options.max_pitch);
+    const max_pitch = raw_max_pitch !== undefined && min_pitch !== undefined && raw_max_pitch < min_pitch
+        ? min_pitch
+        : raw_max_pitch;
     if (container.clientWidth <= 0 || container.clientHeight <= 0) {
         if (container.style.width === "" || container.style.width === "100%") {
             container.style.width = "1024px";
@@ -266,9 +274,19 @@ export function init_map(container, options) {
     if (max_zoom !== undefined) {
         map_options.maxZoom = max_zoom;
     }
+    if (min_pitch !== undefined) {
+        map_options.minPitch = min_pitch;
+    }
+    if (max_pitch !== undefined) {
+        map_options.maxPitch = max_pitch;
+    }
     const bounds = to_bounds(options.bounds);
     if (bounds !== undefined) {
         map_options.bounds = bounds;
+    }
+    const max_bounds = to_bounds(options.max_bounds);
+    if (max_bounds !== undefined) {
+        map_options.maxBounds = max_bounds;
     }
     const pitch = to_finite_number(options.pitch);
     if (pitch !== undefined) {
@@ -278,8 +296,44 @@ export function init_map(container, options) {
     if (bearing !== undefined) {
         map_options.bearing = bearing;
     }
-    if (typeof options.interactive === "boolean") {
-        map_options.interactive = options.interactive;
+    const bearing_snap = to_finite_number(options.bearing_snap);
+    if (bearing_snap !== undefined) {
+        map_options.bearingSnap = bearing_snap;
+    }
+    if (typeof options.projection === "string" && options.projection !== "") {
+        map_options.projection = { type: options.projection };
+    }
+    const render_world_copies = to_boolean(options.render_world_copies);
+    if (render_world_copies !== undefined) {
+        map_options.renderWorldCopies = render_world_copies;
+    }
+    const drag_pan = to_boolean(options.drag_pan);
+    if (drag_pan !== undefined) {
+        map_options.dragPan = drag_pan;
+    }
+    const drag_rotate = to_boolean(options.drag_rotate);
+    if (drag_rotate !== undefined) {
+        map_options.dragRotate = drag_rotate;
+    }
+    const pitch_with_rotate = to_boolean(options.pitch_with_rotate);
+    if (pitch_with_rotate !== undefined) {
+        map_options.pitchWithRotate = pitch_with_rotate;
+    }
+    const interactive = to_boolean(options.interactive);
+    if (interactive !== undefined) {
+        map_options.interactive = interactive;
+    }
+    const cooperative_gestures = to_boolean(options.cooperative_gestures);
+    if (cooperative_gestures !== undefined) {
+        map_options.cooperativeGestures = cooperative_gestures;
+    }
+    const preserve_drawing_buffer = to_boolean(options.preserve_drawing_buffer);
+    if (preserve_drawing_buffer !== undefined) {
+        map_options.preserveDrawingBuffer = preserve_drawing_buffer;
+    }
+    const around_center = to_boolean(options.around_center);
+    if (around_center !== undefined) {
+        map_options.aroundCenter = around_center;
     }
     let map;
     try {
@@ -292,6 +346,13 @@ export function init_map(container, options) {
             container_height: container.clientHeight,
         });
         throw error;
+    }
+    const zoom_on_double_click = to_boolean(options.zoom_on_double_click);
+    if (zoom_on_double_click === true) {
+        map.doubleClickZoom.enable();
+    }
+    else if (zoom_on_double_click === false) {
+        map.doubleClickZoom.disable();
     }
     apply_native_controls(map, options.native_controls);
     const handle = next_id;
