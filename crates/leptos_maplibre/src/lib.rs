@@ -6,26 +6,60 @@ mod types;
 
 pub use component::MapView;
 pub use types::{
-    FeatureHit,
-    MapClickEvent,
-    MapControlAnchor,
-    MapHandle,
-    MapInitOptions,
-    NativeControlOptions,
+    FeatureHit, MapClickEvent, MapControlAnchor, MapHandle, MapInitOptions, NativeControlOptions,
 };
 
 pub fn set_style(handle: MapHandle, style_url: &str) {
     js::set_style(handle, style_url);
 }
 
-pub fn fly_to(
+pub fn fly_to(handle: MapHandle, lng: f64, lat: f64, zoom: Option<f64>, duration_ms: Option<u32>) {
+    js::fly_to(handle, lng, lat, zoom, duration_ms);
+}
+
+pub fn jump_to(
     handle: MapHandle,
     lng: f64,
     lat: f64,
     zoom: Option<f64>,
+    bearing: Option<f64>,
+    pitch: Option<f64>,
+) {
+    js::jump_to(handle, lng, lat, zoom, bearing, pitch);
+}
+
+pub fn ease_to(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    zoom: Option<f64>,
+    bearing: Option<f64>,
+    pitch: Option<f64>,
     duration_ms: Option<u32>,
 ) {
-    js::fly_to(handle, lng, lat, zoom, duration_ms);
+    js::ease_to(handle, lng, lat, zoom, bearing, pitch, duration_ms);
+}
+
+pub fn fit_bounds(
+    handle: MapHandle,
+    west: f64,
+    south: f64,
+    east: f64,
+    north: f64,
+    padding: Option<f64>,
+    duration_ms: Option<u32>,
+    max_zoom: Option<f64>,
+) {
+    js::fit_bounds(
+        handle,
+        west,
+        south,
+        east,
+        north,
+        padding,
+        duration_ms,
+        max_zoom,
+    );
 }
 
 pub fn add_geojson_source(
@@ -37,11 +71,7 @@ pub fn add_geojson_source(
     js::add_geojson_source(handle, source_id, geojson, promote_id);
 }
 
-pub fn update_geojson_source(
-    handle: MapHandle,
-    source_id: &str,
-    geojson: &serde_json::Value,
-) {
+pub fn update_geojson_source(handle: MapHandle, source_id: &str, geojson: &serde_json::Value) {
     js::update_geojson_source(handle, source_id, geojson);
 }
 
@@ -132,15 +162,8 @@ pub fn remove_popup_js(popup_handle: u32) {
 #[cfg(test)]
 mod tests {
     use super::{
-        add_geojson_source,
-        add_layer,
-        fly_to,
-        remove_layer,
-        remove_source,
-        set_feature_state,
-        set_style,
-        update_geojson_source,
-        MapHandle,
+        MapHandle, add_geojson_source, add_layer, ease_to, fit_bounds, fly_to, jump_to,
+        remove_layer, remove_source, set_feature_state, set_style, update_geojson_source,
     };
     use serde_json::json;
 
@@ -149,15 +172,50 @@ mod tests {
         let handle = MapHandle(404);
         set_style(handle, "https://demotiles.maplibre.org/style.json");
         fly_to(handle, 17.0, 59.0, Some(8.0), Some(500));
-        add_geojson_source(handle, "lots", &json!({"type":"FeatureCollection","features":[]}), None);
-        update_geojson_source(handle, "lots", &json!({"type":"FeatureCollection","features":[]}));
+        jump_to(handle, 17.1, 59.1, Some(9.0), Some(8.0), Some(20.0));
+        ease_to(
+            handle,
+            17.2,
+            59.2,
+            Some(9.5),
+            Some(10.0),
+            Some(25.0),
+            Some(750),
+        );
+        fit_bounds(
+            handle,
+            16.0,
+            58.0,
+            18.0,
+            60.0,
+            Some(24.0),
+            Some(600),
+            Some(10.0),
+        );
+        add_geojson_source(
+            handle,
+            "lots",
+            &json!({"type":"FeatureCollection","features":[]}),
+            None,
+        );
+        update_geojson_source(
+            handle,
+            "lots",
+            &json!({"type":"FeatureCollection","features":[]}),
+        );
         add_layer(
             handle,
             "lots-fill",
             &json!({"id":"lots-fill","type":"fill","source":"lots"}),
             None,
         );
-        set_feature_state(handle, "lots", None, &json!("id-1"), &json!({"selected":true}));
+        set_feature_state(
+            handle,
+            "lots",
+            None,
+            &json!("id-1"),
+            &json!({"selected":true}),
+        );
         remove_layer(handle, "lots-fill");
         remove_source(handle, "lots");
     }

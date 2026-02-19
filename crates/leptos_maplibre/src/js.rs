@@ -68,6 +68,39 @@ extern "C" {
         duration_ms: Option<u32>,
     ) -> Result<(), JsValue>;
 
+    #[wasm_bindgen(catch, js_name = jump_to)]
+    fn js_jump_to(
+        handle: u32,
+        lng: f64,
+        lat: f64,
+        zoom: Option<f64>,
+        bearing: Option<f64>,
+        pitch: Option<f64>,
+    ) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = ease_to)]
+    fn js_ease_to(
+        handle: u32,
+        lng: f64,
+        lat: f64,
+        zoom: Option<f64>,
+        bearing: Option<f64>,
+        pitch: Option<f64>,
+        duration_ms: Option<u32>,
+    ) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = fit_bounds)]
+    fn js_fit_bounds(
+        handle: u32,
+        west: f64,
+        south: f64,
+        east: f64,
+        north: f64,
+        padding: Option<f64>,
+        duration_ms: Option<u32>,
+        max_zoom: Option<f64>,
+    ) -> Result<(), JsValue>;
+
     #[wasm_bindgen(catch, js_name = create_marker)]
     fn js_create_marker(handle: u32, lng: f64, lat: f64, draggable: bool) -> Result<u32, JsValue>;
 
@@ -281,7 +314,10 @@ pub(crate) fn parse_click_payload(payload: JsValue) -> Option<MapClickEvent> {
     match serde_json::from_str::<MapClickEvent>(&json_text) {
         Ok(event) => Some(event),
         Err(error) => {
-            log_bridge_error("parse_click_payload_decode", JsValue::from_str(&error.to_string()));
+            log_bridge_error(
+                "parse_click_payload_decode",
+                JsValue::from_str(&error.to_string()),
+            );
             None
         }
     }
@@ -434,6 +470,93 @@ pub(crate) fn fly_to(
         let _ = lat;
         let _ = zoom;
         let _ = duration_ms;
+    }
+}
+
+pub(crate) fn jump_to(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    zoom: Option<f64>,
+    bearing: Option<f64>,
+    pitch: Option<f64>,
+) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_jump_to(handle.0, lng, lat, zoom, bearing, pitch) {
+        log_bridge_error("jump_to", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = lng;
+        let _ = lat;
+        let _ = zoom;
+        let _ = bearing;
+        let _ = pitch;
+    }
+}
+
+pub(crate) fn ease_to(
+    handle: MapHandle,
+    lng: f64,
+    lat: f64,
+    zoom: Option<f64>,
+    bearing: Option<f64>,
+    pitch: Option<f64>,
+    duration_ms: Option<u32>,
+) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_ease_to(handle.0, lng, lat, zoom, bearing, pitch, duration_ms) {
+        log_bridge_error("ease_to", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = lng;
+        let _ = lat;
+        let _ = zoom;
+        let _ = bearing;
+        let _ = pitch;
+        let _ = duration_ms;
+    }
+}
+
+pub(crate) fn fit_bounds(
+    handle: MapHandle,
+    west: f64,
+    south: f64,
+    east: f64,
+    north: f64,
+    padding: Option<f64>,
+    duration_ms: Option<u32>,
+    max_zoom: Option<f64>,
+) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_fit_bounds(
+        handle.0,
+        west,
+        south,
+        east,
+        north,
+        padding,
+        duration_ms,
+        max_zoom,
+    ) {
+        log_bridge_error("fit_bounds", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = west;
+        let _ = south;
+        let _ = east;
+        let _ = north;
+        let _ = padding;
+        let _ = duration_ms;
+        let _ = max_zoom;
     }
 }
 

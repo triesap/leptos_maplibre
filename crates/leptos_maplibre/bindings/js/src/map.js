@@ -627,6 +627,70 @@ export function fly_to(handle, lng, lat, zoom, duration_ms) {
         log_bridge_error("fly_to", error);
     }
 }
+export function jump_to(handle, lng, lat, zoom, bearing, pitch) {
+    const map = get_map(handle);
+    if (map === undefined) {
+        return;
+    }
+    try {
+        map.jumpTo({
+            center: [lng, lat],
+            zoom: zoom ?? map.getZoom(),
+            bearing: bearing ?? map.getBearing(),
+            pitch: pitch ?? map.getPitch(),
+        });
+    }
+    catch (error) {
+        log_bridge_error("jump_to", error);
+    }
+}
+export function ease_to(handle, lng, lat, zoom, bearing, pitch, duration_ms) {
+    const map = get_map(handle);
+    if (map === undefined) {
+        return;
+    }
+    try {
+        map.easeTo({
+            center: [lng, lat],
+            zoom: zoom ?? map.getZoom(),
+            bearing: bearing ?? map.getBearing(),
+            pitch: pitch ?? map.getPitch(),
+            duration: duration_ms ?? undefined,
+        });
+    }
+    catch (error) {
+        log_bridge_error("ease_to", error);
+    }
+}
+export function fit_bounds(handle, west, south, east, north, padding, duration_ms, max_zoom) {
+    const map = get_map(handle);
+    if (map === undefined) {
+        return;
+    }
+    const safe_west = to_finite_number(west);
+    const safe_south = to_finite_number(south);
+    const safe_east = to_finite_number(east);
+    const safe_north = to_finite_number(north);
+    if (safe_west === undefined ||
+        safe_south === undefined ||
+        safe_east === undefined ||
+        safe_north === undefined) {
+        return;
+    }
+    try {
+        map.fitBounds([
+            [safe_west, safe_south],
+            [safe_east, safe_north],
+        ], {
+            padding: to_finite_number(padding),
+            duration: duration_ms ?? undefined,
+            maxZoom: to_finite_number(max_zoom),
+        });
+    }
+    catch (error) {
+        log_bridge_error("fit_bounds", error);
+    }
+}
 export function create_marker(handle, lng, lat, draggable) {
     const map = get_map(handle);
     if (map === undefined) {
