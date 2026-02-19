@@ -261,18 +261,51 @@ pub fn create_popup_js(
     html: &str,
     close_button: bool,
     close_on_click: bool,
+    anchor: Option<&str>,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    max_width: Option<f64>,
 ) -> Option<u32> {
-    js::create_popup(handle, lng, lat, html, close_button, close_on_click)
+    js::create_popup(
+        handle,
+        lng,
+        lat,
+        html,
+        close_button,
+        close_on_click,
+        anchor,
+        offset_x,
+        offset_y,
+        max_width,
+    )
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn update_popup_js(popup_handle: u32, lng: f64, lat: f64, html: &str) {
-    js::update_popup(popup_handle, lng, lat, html);
+pub fn update_popup_js(
+    popup_handle: u32,
+    lng: f64,
+    lat: f64,
+    html: &str,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    max_width: Option<f64>,
+) {
+    js::update_popup(popup_handle, lng, lat, html, offset_x, offset_y, max_width);
 }
 
 #[cfg(target_arch = "wasm32")]
 pub fn remove_popup_js(popup_handle: u32) {
     js::remove_popup(popup_handle);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn register_on_popup_events_js(popup_handle: u32, callback: &js_sys::Function) {
+    js::register_on_popup_events(popup_handle, callback);
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn unregister_on_popup_events_js(popup_handle: u32) {
+    js::unregister_on_popup_events(popup_handle);
 }
 
 #[cfg(test)]

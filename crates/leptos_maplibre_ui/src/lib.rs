@@ -12,6 +12,8 @@ pub use events::{
     LayerFeatureHit,
     MarkerDragEvent,
     MarkerDragEventKind,
+    PopupLifecycleEvent,
+    PopupLifecycleEventKind,
     MapEvent,
     MapEventKind,
     MapViewState,

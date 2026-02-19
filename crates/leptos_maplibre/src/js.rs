@@ -173,13 +173,31 @@ extern "C" {
         html: &str,
         close_button: bool,
         close_on_click: bool,
+        anchor: Option<&str>,
+        offset_x: Option<f64>,
+        offset_y: Option<f64>,
+        max_width: Option<f64>,
     ) -> Result<u32, JsValue>;
 
     #[wasm_bindgen(catch, js_name = update_popup)]
-    fn js_update_popup(popup_handle: u32, lng: f64, lat: f64, html: &str) -> Result<(), JsValue>;
+    fn js_update_popup(
+        popup_handle: u32,
+        lng: f64,
+        lat: f64,
+        html: &str,
+        offset_x: Option<f64>,
+        offset_y: Option<f64>,
+        max_width: Option<f64>,
+    ) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = remove_popup)]
     fn js_remove_popup(popup_handle: u32) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = register_on_popup_events)]
+    fn js_register_on_popup_events(popup_handle: u32, cb: &js_sys::Function) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = unregister_on_popup_events)]
+    fn js_unregister_on_popup_events(popup_handle: u32) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = register_on_click)]
     fn js_register_on_click(handle: u32, cb: &js_sys::Function) -> Result<(), JsValue>;
@@ -510,10 +528,25 @@ pub(crate) fn create_popup(
     html: &str,
     close_button: bool,
     close_on_click: bool,
+    anchor: Option<&str>,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    max_width: Option<f64>,
 ) -> Option<u32> {
     #[cfg(target_arch = "wasm32")]
     {
-        match js_create_popup(handle.0, lng, lat, html, close_button, close_on_click) {
+        match js_create_popup(
+            handle.0,
+            lng,
+            lat,
+            html,
+            close_button,
+            close_on_click,
+            anchor,
+            offset_x,
+            offset_y,
+            max_width,
+        ) {
             Ok(popup_handle) if popup_handle != 0 => Some(popup_handle),
             Ok(_) => None,
             Err(error) => {
@@ -531,14 +564,26 @@ pub(crate) fn create_popup(
         let _ = html;
         let _ = close_button;
         let _ = close_on_click;
+        let _ = anchor;
+        let _ = offset_x;
+        let _ = offset_y;
+        let _ = max_width;
         None
     }
 }
 
 #[allow(dead_code)]
-pub(crate) fn update_popup(popup_handle: u32, lng: f64, lat: f64, html: &str) {
+pub(crate) fn update_popup(
+    popup_handle: u32,
+    lng: f64,
+    lat: f64,
+    html: &str,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    max_width: Option<f64>,
+) {
     #[cfg(target_arch = "wasm32")]
-    if let Err(error) = js_update_popup(popup_handle, lng, lat, html) {
+    if let Err(error) = js_update_popup(popup_handle, lng, lat, html, offset_x, offset_y, max_width) {
         log_bridge_error("update_popup", error);
     }
 
@@ -548,6 +593,9 @@ pub(crate) fn update_popup(popup_handle: u32, lng: f64, lat: f64, html: &str) {
         let _ = lng;
         let _ = lat;
         let _ = html;
+        let _ = offset_x;
+        let _ = offset_y;
+        let _ = max_width;
     }
 }
 
@@ -556,6 +604,31 @@ pub(crate) fn remove_popup(popup_handle: u32) {
     #[cfg(target_arch = "wasm32")]
     if let Err(error) = js_remove_popup(popup_handle) {
         log_bridge_error("remove_popup", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = popup_handle;
+    }
+}
+
+#[allow(dead_code)]
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn register_on_popup_events(popup_handle: u32, callback: &js_sys::Function) {
+    if let Err(error) = js_register_on_popup_events(popup_handle, callback) {
+        log_bridge_error("register_on_popup_events", error);
+    }
+}
+
+#[allow(dead_code)]
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn register_on_popup_events(_popup_handle: u32, _callback: &()) {}
+
+#[allow(dead_code)]
+pub(crate) fn unregister_on_popup_events(popup_handle: u32) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_unregister_on_popup_events(popup_handle) {
+        log_bridge_error("unregister_on_popup_events", error);
     }
 
     #[cfg(not(target_arch = "wasm32"))]

@@ -12,6 +12,8 @@ const marker_drag_event_handlers = new globalThis.Map();
 const popups = new globalThis.Map();
 const popup_maps = new globalThis.Map();
 const map_popups = new globalThis.Map();
+const popup_event_cbs = new globalThis.Map();
+const popup_event_handlers = new globalThis.Map();
 const click_cbs = new globalThis.Map();
 const load_cbs = new globalThis.Map();
 const map_event_cbs = new globalThis.Map();
@@ -199,6 +201,16 @@ function untrack_popup(popup_handle) {
     if (popup_set.size === 0) {
         map_popups.delete(handle);
     }
+}
+function detach_popup_events(popup_handle) {
+    const popup = popups.get(popup_handle);
+    const handlers = popup_event_handlers.get(popup_handle);
+    if (popup !== undefined && handlers !== undefined) {
+        popup.off("open", handlers.open);
+        popup.off("close", handlers.close);
+    }
+    popup_event_handlers.delete(popup_handle);
+    popup_event_cbs.delete(popup_handle);
 }
 function query_layer_features(map, event, layer_id) {
     if (event.features !== undefined) {
@@ -468,6 +480,7 @@ export function destroy_map(handle) {
                 continue;
             }
             try {
+                detach_popup_events(popup_handle);
                 popup.remove();
             }
             catch (error) {
@@ -932,16 +945,41 @@ export function register_on_marker_drag_events(marker_handle, cb) {
 export function unregister_on_marker_drag_events(marker_handle) {
     detach_marker_drag_events(marker_handle);
 }
-export function create_popup(handle, lng, lat, html, close_button, close_on_click) {
+export function create_popup(
+    handle,
+    lng,
+    lat,
+    html,
+    close_button,
+    close_on_click,
+    anchor,
+    offset_x,
+    offset_y,
+    max_width,
+) {
     const map = get_map(handle);
     if (map === undefined) {
         return 0;
     }
     try {
-        const popup = new maplibregl.Popup({
+        const popup_options = {
             closeButton: close_button === true,
             closeOnClick: close_on_click === true,
-        })
+        };
+        const popup_anchor = to_control_anchor(anchor);
+        if (popup_anchor !== undefined) {
+            popup_options.anchor = popup_anchor;
+        }
+        const resolved_offset_x = to_finite_number(offset_x);
+        const resolved_offset_y = to_finite_number(offset_y);
+        if (resolved_offset_x !== undefined && resolved_offset_y !== undefined) {
+            popup_options.offset = [resolved_offset_x, resolved_offset_y];
+        }
+        const resolved_max_width = to_finite_number(max_width);
+        if (resolved_max_width !== undefined) {
+            popup_options.maxWidth = `${resolved_max_width}px`;
+        }
+        const popup = new maplibregl.Popup(popup_options)
             .setLngLat([lng, lat])
             .setHTML(html)
             .addTo(map);
@@ -956,7 +994,7 @@ export function create_popup(handle, lng, lat, html, close_button, close_on_clic
         return 0;
     }
 }
-export function update_popup(popup_handle, lng, lat, html) {
+export function update_popup(popup_handle, lng, lat, html, offset_x, offset_y, max_width) {
     const popup = popups.get(popup_handle);
     if (popup === undefined) {
         return;
@@ -964,6 +1002,17 @@ export function update_popup(popup_handle, lng, lat, html) {
     try {
         popup.setLngLat([lng, lat]);
         popup.setHTML(html);
+        const resolved_offset_x = to_finite_number(offset_x);
+        const resolved_offset_y = to_finite_number(offset_y);
+        if (resolved_offset_x !== undefined &&
+            resolved_offset_y !== undefined &&
+            typeof popup.setOffset === "function") {
+            popup.setOffset([resolved_offset_x, resolved_offset_y]);
+        }
+        const resolved_max_width = to_finite_number(max_width);
+        if (resolved_max_width !== undefined && typeof popup.setMaxWidth === "function") {
+            popup.setMaxWidth(`${resolved_max_width}px`);
+        }
     }
     catch (error) {
         log_bridge_error("update_popup", error);
@@ -981,9 +1030,42 @@ export function remove_popup(popup_handle) {
         log_bridge_error("remove_popup", error);
     }
     finally {
+        detach_popup_events(popup_handle);
         popups.delete(popup_handle);
         untrack_popup(popup_handle);
     }
+}
+function emit_popup_lifecycle_event(popup_handle, kind) {
+    const popup = popups.get(popup_handle);
+    const callback = popup_event_cbs.get(popup_handle);
+    if (popup === undefined || callback === undefined) {
+        return;
+    }
+    const lng_lat = popup.getLngLat();
+    callback({
+        kind,
+        lng: lng_lat.lng,
+        lat: lng_lat.lat,
+    });
+}
+export function register_on_popup_events(popup_handle, cb) {
+    const popup = popups.get(popup_handle);
+    if (popup === undefined) {
+        return;
+    }
+    popup_event_cbs.set(popup_handle, cb);
+    detach_popup_events(popup_handle);
+    popup_event_cbs.set(popup_handle, cb);
+    const handlers = {
+        open: () => emit_popup_lifecycle_event(popup_handle, "open"),
+        close: () => emit_popup_lifecycle_event(popup_handle, "close"),
+    };
+    popup_event_handlers.set(popup_handle, handlers);
+    popup.on("open", handlers.open);
+    popup.on("close", handlers.close);
+}
+export function unregister_on_popup_events(popup_handle) {
+    detach_popup_events(popup_handle);
 }
 export function register_on_click(handle, cb) {
     const map = get_map(handle);

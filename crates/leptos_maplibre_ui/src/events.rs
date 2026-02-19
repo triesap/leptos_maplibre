@@ -83,11 +83,25 @@ pub struct MarkerDragEvent {
     pub lat: f64,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PopupLifecycleEventKind {
+    Open,
+    Close,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PopupLifecycleEvent {
+    pub kind: PopupLifecycleEventKind,
+    pub lng: f64,
+    pub lat: f64,
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         LayerEvent, LayerEventKind, LayerFeatureHit, MapEvent, MapEventKind, MapViewState,
-        MarkerDragEvent, MarkerDragEventKind,
+        MarkerDragEvent, MarkerDragEventKind, PopupLifecycleEvent, PopupLifecycleEventKind,
     };
     use serde_json::json;
 
@@ -141,6 +155,20 @@ mod tests {
         let encoded = serde_json::to_string(&event).expect("serialize marker drag event");
         let decoded: MarkerDragEvent =
             serde_json::from_str(&encoded).expect("deserialize marker drag event");
+        assert_eq!(decoded, event);
+    }
+
+    #[test]
+    fn popup_lifecycle_event_roundtrip() {
+        let event = PopupLifecycleEvent {
+            kind: PopupLifecycleEventKind::Open,
+            lng: 13.2,
+            lat: 59.4,
+        };
+
+        let encoded = serde_json::to_string(&event).expect("serialize popup lifecycle event");
+        let decoded: PopupLifecycleEvent =
+            serde_json::from_str(&encoded).expect("deserialize popup lifecycle event");
         assert_eq!(decoded, event);
     }
 }
