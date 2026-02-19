@@ -1,11 +1,21 @@
 #![forbid(unsafe_code)]
 
+mod controls;
 mod events;
 mod js;
 mod map_events;
 mod marker;
 mod popup;
 
+pub use controls::{
+    AttributionControl,
+    FullscreenControl,
+    GeolocateControl,
+    NativeControl,
+    NativeControlKind,
+    NavigationControl,
+    ScaleControl,
+};
 pub use events::{
     LayerEvent,
     LayerEventKind,

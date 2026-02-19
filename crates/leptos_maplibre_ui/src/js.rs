@@ -1,4 +1,4 @@
-use leptos_maplibre::MapHandle;
+use leptos_maplibre::{MapControlAnchor, MapHandle};
 
 #[cfg(target_arch = "wasm32")]
 use crate::events::{LayerEvent, MapEvent, MarkerDragEvent, PopupLifecycleEvent};
@@ -63,6 +63,23 @@ pub(crate) fn register_on_layer_events(
 #[allow(dead_code)]
 pub(crate) fn unregister_on_layer_events(handle: MapHandle, layer_id: &str) {
     leptos_maplibre::unregister_on_layer_events_js(handle, layer_id);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn add_native_control(
+    handle: MapHandle,
+    control_kind: &str,
+    anchor: Option<MapControlAnchor>,
+    options: Option<&serde_json::Value>,
+) -> Option<u32> {
+    leptos_maplibre::add_native_control_js(handle, control_kind, anchor, options)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
+pub(crate) fn remove_native_control(control_handle: u32) {
+    leptos_maplibre::remove_native_control_js(control_handle);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -190,6 +207,21 @@ pub(crate) fn unregister_on_popup_events(popup_handle: u32) {
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
 pub(crate) fn unregister_on_map_events(_handle: MapHandle) {}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn add_native_control(
+    _handle: MapHandle,
+    _control_kind: &str,
+    _anchor: Option<MapControlAnchor>,
+    _options: Option<&serde_json::Value>,
+) -> Option<u32> {
+    None
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
+pub(crate) fn remove_native_control(_control_handle: u32) {}
 
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]

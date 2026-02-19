@@ -2,6 +2,7 @@ import maplibregl from "https://esm.sh/maplibre-gl@5.13.0";
 let next_id = 1;
 let next_marker_id = 1;
 let next_popup_id = 1;
+let next_control_id = 1;
 const maps = new globalThis.Map();
 const observers = new globalThis.Map();
 const markers = new globalThis.Map();
@@ -14,6 +15,9 @@ const popup_maps = new globalThis.Map();
 const map_popups = new globalThis.Map();
 const popup_event_cbs = new globalThis.Map();
 const popup_event_handlers = new globalThis.Map();
+const controls = new globalThis.Map();
+const control_maps = new globalThis.Map();
+const map_controls = new globalThis.Map();
 const click_cbs = new globalThis.Map();
 const load_cbs = new globalThis.Map();
 const map_event_cbs = new globalThis.Map();
@@ -212,6 +216,47 @@ function detach_popup_events(popup_handle) {
     popup_event_handlers.delete(popup_handle);
     popup_event_cbs.delete(popup_handle);
 }
+function track_control(handle, control_handle, control) {
+    controls.set(control_handle, control);
+    control_maps.set(control_handle, handle);
+    const existing = map_controls.get(handle);
+    if (existing !== undefined) {
+        existing.add(control_handle);
+    }
+    else {
+        map_controls.set(handle, new globalThis.Set([control_handle]));
+    }
+}
+function untrack_control(control_handle) {
+    const handle = control_maps.get(control_handle);
+    if (handle === undefined) {
+        return;
+    }
+    control_maps.delete(control_handle);
+    const control_set = map_controls.get(handle);
+    if (control_set === undefined) {
+        return;
+    }
+    control_set.delete(control_handle);
+    if (control_set.size === 0) {
+        map_controls.delete(handle);
+    }
+}
+function remove_tracked_control(control_handle) {
+    const control = controls.get(control_handle);
+    const handle = control_maps.get(control_handle);
+    const map = handle === undefined ? undefined : maps.get(handle);
+    if (map !== undefined && control !== undefined) {
+        try {
+            map.removeControl(control);
+        }
+        catch (error) {
+            log_bridge_error("remove_native_control", error);
+        }
+    }
+    controls.delete(control_handle);
+    untrack_control(control_handle);
+}
 function query_layer_features(map, event, layer_id) {
     if (event.features !== undefined) {
         return event.features;
@@ -259,6 +304,50 @@ function apply_native_controls(map, controls) {
     if (attribution_anchor !== undefined) {
         map.addControl(new maplibregl.AttributionControl(), attribution_anchor);
     }
+}
+function create_native_control(control_kind, options) {
+    const normalized_options =
+        typeof options === "object" && options !== null ? options : {};
+    if (control_kind === "navigation") {
+        return new maplibregl.NavigationControl(normalized_options);
+    }
+    if (control_kind === "scale") {
+        return new maplibregl.ScaleControl(normalized_options);
+    }
+    if (control_kind === "fullscreen") {
+        return new maplibregl.FullscreenControl(normalized_options);
+    }
+    if (control_kind === "geolocate") {
+        return new maplibregl.GeolocateControl(normalized_options);
+    }
+    if (control_kind === "attribution") {
+        return new maplibregl.AttributionControl(normalized_options);
+    }
+    return undefined;
+}
+export function add_native_control(handle, control_kind, anchor, options) {
+    const map = get_map(handle);
+    if (map === undefined) {
+        return 0;
+    }
+    const control = create_native_control(control_kind, options);
+    if (control === undefined) {
+        return 0;
+    }
+    try {
+        map.addControl(control, to_control_anchor(anchor));
+        const control_handle = next_control_id;
+        next_control_id += 1;
+        track_control(handle, control_handle, control);
+        return control_handle;
+    }
+    catch (error) {
+        log_bridge_error("add_native_control", error);
+        return 0;
+    }
+}
+export function remove_native_control(control_handle) {
+    remove_tracked_control(control_handle);
 }
 export function init_map(container, options) {
     const canvas_context_attributes = is_nil(options.antialias) ? undefined : { antialias: options.antialias };
@@ -490,6 +579,12 @@ export function destroy_map(handle) {
             popup_maps.delete(popup_handle);
         }
         map_popups.delete(handle);
+    }
+    const control_set = map_controls.get(handle);
+    if (control_set !== undefined) {
+        for (const control_handle of Array.from(control_set)) {
+            remove_tracked_control(control_handle);
+        }
     }
     const prefix = layer_key_prefix(handle);
     for (const [key, handlers] of layer_event_handlers.entries()) {

@@ -1,4 +1,4 @@
-use crate::types::MapHandle;
+use crate::types::{MapControlAnchor, MapHandle};
 
 #[cfg(target_arch = "wasm32")]
 use crate::types::{MapClickEvent, MapInitOptions};
@@ -193,6 +193,17 @@ extern "C" {
     #[wasm_bindgen(catch, js_name = remove_popup)]
     fn js_remove_popup(popup_handle: u32) -> Result<(), JsValue>;
 
+    #[wasm_bindgen(catch, js_name = add_native_control)]
+    fn js_add_native_control(
+        handle: u32,
+        control_kind: &str,
+        anchor: Option<&str>,
+        options: &JsValue,
+    ) -> Result<u32, JsValue>;
+
+    #[wasm_bindgen(catch, js_name = remove_native_control)]
+    fn js_remove_native_control(control_handle: u32) -> Result<(), JsValue>;
+
     #[wasm_bindgen(catch, js_name = register_on_popup_events)]
     fn js_register_on_popup_events(popup_handle: u32, cb: &js_sys::Function) -> Result<(), JsValue>;
 
@@ -261,6 +272,16 @@ fn parse_json(value: &serde_json::Value, context: &str) -> Option<JsValue> {
 }
 
 #[cfg(target_arch = "wasm32")]
+fn control_anchor_to_str(anchor: MapControlAnchor) -> &'static str {
+    match anchor {
+        MapControlAnchor::TopLeft => "top_left",
+        MapControlAnchor::TopRight => "top_right",
+        MapControlAnchor::BottomLeft => "bottom_left",
+        MapControlAnchor::BottomRight => "bottom_right",
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
 pub(crate) fn init_map(
     container: &web_sys::HtmlElement,
     options: &MapInitOptions,
@@ -294,6 +315,57 @@ pub(crate) fn destroy_map(handle: MapHandle) {
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
 pub(crate) fn destroy_map(_handle: MapHandle) {}
+
+#[allow(dead_code)]
+pub(crate) fn add_native_control(
+    handle: MapHandle,
+    control_kind: &str,
+    anchor: Option<MapControlAnchor>,
+    options: Option<&serde_json::Value>,
+) -> Option<u32> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let options = if let Some(options) = options {
+            let Some(options) = parse_json(options, "add_native_control_options_parse") else {
+                return None;
+            };
+            options
+        } else {
+            JsValue::NULL
+        };
+        let anchor = anchor.map(control_anchor_to_str);
+        match js_add_native_control(handle.0, control_kind, anchor, &options) {
+            Ok(control_handle) if control_handle != 0 => Some(control_handle),
+            Ok(_) => None,
+            Err(error) => {
+                log_bridge_error("add_native_control", error);
+                None
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = control_kind;
+        let _ = anchor;
+        let _ = options;
+        None
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn remove_native_control(control_handle: u32) {
+    #[cfg(target_arch = "wasm32")]
+    if let Err(error) = js_remove_native_control(control_handle) {
+        log_bridge_error("remove_native_control", error);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = control_handle;
+    }
+}
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn register_on_click(handle: MapHandle, callback: &ClickClosure) {

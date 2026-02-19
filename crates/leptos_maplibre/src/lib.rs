@@ -200,6 +200,21 @@ pub fn unregister_on_layer_events_js(handle: MapHandle, layer_id: &str) {
 }
 
 #[cfg(target_arch = "wasm32")]
+pub fn add_native_control_js(
+    handle: MapHandle,
+    control_kind: &str,
+    anchor: Option<MapControlAnchor>,
+    options: Option<&serde_json::Value>,
+) -> Option<u32> {
+    js::add_native_control(handle, control_kind, anchor, options)
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn remove_native_control_js(control_handle: u32) {
+    js::remove_native_control(control_handle);
+}
+
+#[cfg(target_arch = "wasm32")]
 pub fn create_marker_js(
     handle: MapHandle,
     lng: f64,
