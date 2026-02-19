@@ -473,6 +473,10 @@ export function destroy_map(handle) {
         map.off("click", layer_id, handlers.click);
         map.off("dblclick", layer_id, handlers.dblclick);
         map.off("contextmenu", layer_id, handlers.contextmenu);
+        map.off("mousedown", layer_id, handlers.mousedown);
+        map.off("mouseup", layer_id, handlers.mouseup);
+        map.off("mouseover", layer_id, handlers.mouseover);
+        map.off("mouseout", layer_id, handlers.mouseout);
         map.off("mouseenter", layer_id, handlers.mouseenter);
         map.off("mousemove", layer_id, handlers.mousemove);
         map.off("mouseleave", layer_id, handlers.mouseleave);
@@ -1034,6 +1038,10 @@ export function register_on_layer_events(handle, layer_id, cb) {
         map.off("click", layer_id, previous.click);
         map.off("dblclick", layer_id, previous.dblclick);
         map.off("contextmenu", layer_id, previous.contextmenu);
+        map.off("mousedown", layer_id, previous.mousedown);
+        map.off("mouseup", layer_id, previous.mouseup);
+        map.off("mouseover", layer_id, previous.mouseover);
+        map.off("mouseout", layer_id, previous.mouseout);
         map.off("mouseenter", layer_id, previous.mouseenter);
         map.off("mousemove", layer_id, previous.mousemove);
         map.off("mouseleave", layer_id, previous.mouseleave);
@@ -1043,6 +1051,10 @@ export function register_on_layer_events(handle, layer_id, cb) {
         click: (event) => emit_layer_event(handle, layer_id, map, event, "click"),
         dblclick: (event) => emit_layer_event(handle, layer_id, map, event, "double_click"),
         contextmenu: (event) => emit_layer_event(handle, layer_id, map, event, "context_menu"),
+        mousedown: (event) => emit_layer_event(handle, layer_id, map, event, "mouse_down"),
+        mouseup: (event) => emit_layer_event(handle, layer_id, map, event, "mouse_up"),
+        mouseover: (event) => emit_layer_event(handle, layer_id, map, event, "mouse_over"),
+        mouseout: (event) => emit_layer_event(handle, layer_id, map, event, "mouse_out"),
         mouseenter: (event) => emit_layer_event(handle, layer_id, map, event, "mouse_enter"),
         mousemove: (event) => emit_layer_event(handle, layer_id, map, event, "mouse_move"),
         mouseleave: (event) => emit_layer_event(handle, layer_id, map, event, "mouse_leave"),
@@ -1051,6 +1063,10 @@ export function register_on_layer_events(handle, layer_id, cb) {
     map.on("click", layer_id, handlers.click);
     map.on("dblclick", layer_id, handlers.dblclick);
     map.on("contextmenu", layer_id, handlers.contextmenu);
+    map.on("mousedown", layer_id, handlers.mousedown);
+    map.on("mouseup", layer_id, handlers.mouseup);
+    map.on("mouseover", layer_id, handlers.mouseover);
+    map.on("mouseout", layer_id, handlers.mouseout);
     map.on("mouseenter", layer_id, handlers.mouseenter);
     map.on("mousemove", layer_id, handlers.mousemove);
     map.on("mouseleave", layer_id, handlers.mouseleave);
@@ -1068,6 +1084,10 @@ export function unregister_on_layer_events(handle, layer_id) {
         map.off("click", layer_id, handlers.click);
         map.off("dblclick", layer_id, handlers.dblclick);
         map.off("contextmenu", layer_id, handlers.contextmenu);
+        map.off("mousedown", layer_id, handlers.mousedown);
+        map.off("mouseup", layer_id, handlers.mouseup);
+        map.off("mouseover", layer_id, handlers.mouseover);
+        map.off("mouseout", layer_id, handlers.mouseout);
         map.off("mouseenter", layer_id, handlers.mouseenter);
         map.off("mousemove", layer_id, handlers.mousemove);
         map.off("mouseleave", layer_id, handlers.mouseleave);

@@ -29,6 +29,10 @@ pub fn MapEvents(
     #[prop(optional)] on_layer_click: Option<Callback<LayerEvent>>,
     #[prop(optional)] on_layer_double_click: Option<Callback<LayerEvent>>,
     #[prop(optional)] on_layer_context_menu: Option<Callback<LayerEvent>>,
+    #[prop(optional)] on_layer_mouse_down: Option<Callback<LayerEvent>>,
+    #[prop(optional)] on_layer_mouse_up: Option<Callback<LayerEvent>>,
+    #[prop(optional)] on_layer_mouse_over: Option<Callback<LayerEvent>>,
+    #[prop(optional)] on_layer_mouse_out: Option<Callback<LayerEvent>>,
     #[prop(optional)] on_layer_mouse_enter: Option<Callback<LayerEvent>>,
     #[prop(optional)] on_layer_mouse_move: Option<Callback<LayerEvent>>,
     #[prop(optional)] on_layer_mouse_leave: Option<Callback<LayerEvent>>,
@@ -59,6 +63,10 @@ pub fn MapEvents(
         let on_layer_click = on_layer_click.clone();
         let on_layer_double_click = on_layer_double_click.clone();
         let on_layer_context_menu = on_layer_context_menu.clone();
+        let on_layer_mouse_down = on_layer_mouse_down.clone();
+        let on_layer_mouse_up = on_layer_mouse_up.clone();
+        let on_layer_mouse_over = on_layer_mouse_over.clone();
+        let on_layer_mouse_out = on_layer_mouse_out.clone();
         let on_layer_mouse_enter = on_layer_mouse_enter.clone();
         let on_layer_mouse_move = on_layer_mouse_move.clone();
         let on_layer_mouse_leave = on_layer_mouse_leave.clone();
@@ -174,6 +182,10 @@ pub fn MapEvents(
             || on_layer_click.is_some()
             || on_layer_double_click.is_some()
             || on_layer_context_menu.is_some()
+            || on_layer_mouse_down.is_some()
+            || on_layer_mouse_up.is_some()
+            || on_layer_mouse_over.is_some()
+            || on_layer_mouse_out.is_some()
             || on_layer_mouse_enter.is_some()
             || on_layer_mouse_move.is_some()
             || on_layer_mouse_leave.is_some();
@@ -201,6 +213,26 @@ pub fn MapEvents(
                     LayerEventKind::ContextMenu => {
                         if let Some(on_layer_context_menu) = on_layer_context_menu.as_ref() {
                             on_layer_context_menu.run(event);
+                        }
+                    }
+                    LayerEventKind::MouseDown => {
+                        if let Some(on_layer_mouse_down) = on_layer_mouse_down.as_ref() {
+                            on_layer_mouse_down.run(event);
+                        }
+                    }
+                    LayerEventKind::MouseUp => {
+                        if let Some(on_layer_mouse_up) = on_layer_mouse_up.as_ref() {
+                            on_layer_mouse_up.run(event);
+                        }
+                    }
+                    LayerEventKind::MouseOver => {
+                        if let Some(on_layer_mouse_over) = on_layer_mouse_over.as_ref() {
+                            on_layer_mouse_over.run(event);
+                        }
+                    }
+                    LayerEventKind::MouseOut => {
+                        if let Some(on_layer_mouse_out) = on_layer_mouse_out.as_ref() {
+                            on_layer_mouse_out.run(event);
                         }
                     }
                     LayerEventKind::MouseEnter => {
@@ -270,6 +302,10 @@ pub fn MapEvents(
         let _ = on_layer_click;
         let _ = on_layer_double_click;
         let _ = on_layer_context_menu;
+        let _ = on_layer_mouse_down;
+        let _ = on_layer_mouse_up;
+        let _ = on_layer_mouse_over;
+        let _ = on_layer_mouse_out;
         let _ = on_layer_mouse_enter;
         let _ = on_layer_mouse_move;
         let _ = on_layer_mouse_leave;
