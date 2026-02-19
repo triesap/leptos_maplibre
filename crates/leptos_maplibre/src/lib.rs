@@ -179,6 +179,18 @@ pub fn set_feature_state(
     js::set_feature_state(handle, source_id, source_layer, feature_id, state);
 }
 
+pub fn set_terrain(handle: MapHandle, terrain: Option<&serde_json::Value>) {
+    js::set_terrain(handle, terrain);
+}
+
+pub fn set_fog(handle: MapHandle, fog: Option<&serde_json::Value>) {
+    js::set_fog(handle, fog);
+}
+
+pub fn set_light(handle: MapHandle, light: Option<&serde_json::Value>) {
+    js::set_light(handle, light);
+}
+
 #[cfg(target_arch = "wasm32")]
 pub fn register_on_map_events_js(handle: MapHandle, callback: &js_sys::Function) {
     js::register_on_map_events(handle, callback);
@@ -328,9 +340,9 @@ mod tests {
     use super::{
         MapHandle, add_canvas_source, add_geojson_source, add_image_source, add_layer,
         add_raster_source, add_source, add_vector_source, add_video_source, ease_to, fit_bounds,
-        fly_to, jump_to, remove_layer, remove_source, set_feature_state, set_filter,
-        set_layer_zoom_range, set_layout_property, set_paint_property, set_style,
-        update_geojson_source,
+        fly_to, jump_to, remove_layer, remove_source, set_feature_state, set_filter, set_fog,
+        set_layer_zoom_range, set_layout_property, set_light, set_paint_property, set_style,
+        set_terrain, update_geojson_source,
     };
     use serde_json::json;
 
@@ -417,6 +429,9 @@ mod tests {
             &json!("id-1"),
             &json!({"selected":true}),
         );
+        set_terrain(handle, Some(&json!({"source":"dem","exaggeration":1.4})));
+        set_fog(handle, Some(&json!({"range":[0.6,8.0],"color":"#dbe7ff"})));
+        set_light(handle, Some(&json!({"anchor":"viewport","color":"#ffffff"})));
         remove_layer(handle, "lots-fill");
         remove_source(handle, "lots");
     }

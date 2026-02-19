@@ -89,6 +89,15 @@ extern "C" {
         state: &JsValue,
     ) -> Result<(), JsValue>;
 
+    #[wasm_bindgen(catch, js_name = set_terrain)]
+    fn js_set_terrain(handle: u32, terrain: &JsValue) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = set_fog)]
+    fn js_set_fog(handle: u32, fog: &JsValue) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = set_light)]
+    fn js_set_light(handle: u32, light: &JsValue) -> Result<(), JsValue>;
+
     #[wasm_bindgen(catch, js_name = fly_to)]
     fn js_fly_to(
         handle: u32,
@@ -1059,5 +1068,74 @@ pub(crate) fn set_feature_state(
         let _ = source_layer;
         let _ = feature_id;
         let _ = state;
+    }
+}
+
+pub(crate) fn set_terrain(handle: MapHandle, terrain: Option<&serde_json::Value>) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let terrain = if let Some(terrain) = terrain {
+            let Some(terrain) = parse_json(terrain, "set_terrain_parse") else {
+                return;
+            };
+            terrain
+        } else {
+            JsValue::NULL
+        };
+        if let Err(error) = js_set_terrain(handle.0, &terrain) {
+            log_bridge_error("set_terrain", error);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = terrain;
+    }
+}
+
+pub(crate) fn set_fog(handle: MapHandle, fog: Option<&serde_json::Value>) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let fog = if let Some(fog) = fog {
+            let Some(fog) = parse_json(fog, "set_fog_parse") else {
+                return;
+            };
+            fog
+        } else {
+            JsValue::NULL
+        };
+        if let Err(error) = js_set_fog(handle.0, &fog) {
+            log_bridge_error("set_fog", error);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = fog;
+    }
+}
+
+pub(crate) fn set_light(handle: MapHandle, light: Option<&serde_json::Value>) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let light = if let Some(light) = light {
+            let Some(light) = parse_json(light, "set_light_parse") else {
+                return;
+            };
+            light
+        } else {
+            JsValue::NULL
+        };
+        if let Err(error) = js_set_light(handle.0, &light) {
+            log_bridge_error("set_light", error);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = handle;
+        let _ = light;
     }
 }

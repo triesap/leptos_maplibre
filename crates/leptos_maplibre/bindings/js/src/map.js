@@ -827,6 +827,45 @@ export function set_feature_state(handle, source_id, source_layer, feature_id, s
         log_bridge_error("set_feature_state", error);
     }
 }
+export function set_terrain(handle, terrain) {
+    const map = get_map(handle);
+    if (map === undefined) {
+        return;
+    }
+    try {
+        map.setTerrain(terrain ?? null);
+    }
+    catch (error) {
+        log_bridge_error("set_terrain", error);
+    }
+}
+export function set_fog(handle, fog) {
+    const map = get_map(handle);
+    if (map === undefined || typeof map.setFog !== "function") {
+        return;
+    }
+    try {
+        map.setFog(fog ?? null);
+    }
+    catch (error) {
+        log_bridge_error("set_fog", error);
+    }
+}
+export function set_light(handle, light) {
+    const map = get_map(handle);
+    if (map === undefined || typeof map.setLight !== "function") {
+        return;
+    }
+    if (light === undefined || light === null) {
+        return;
+    }
+    try {
+        map.setLight(light);
+    }
+    catch (error) {
+        log_bridge_error("set_light", error);
+    }
+}
 export function fly_to(handle, lng, lat, zoom, duration_ms) {
     const map = get_map(handle);
     if (map === undefined) {
