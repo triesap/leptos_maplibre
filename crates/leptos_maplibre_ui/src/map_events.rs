@@ -11,11 +11,20 @@ pub fn MapEvents(
     handle: MapHandle,
     #[prop(optional, into)] layer_id: Option<String>,
     #[prop(optional)] on_event: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_move_start: Option<Callback<MapEvent>>,
     #[prop(optional)] on_move: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_move_end: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_zoom_start: Option<Callback<MapEvent>>,
     #[prop(optional)] on_zoom: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_zoom_end: Option<Callback<MapEvent>>,
     #[prop(optional)] on_idle: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_resize: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_render: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_style_load: Option<Callback<MapEvent>>,
     #[prop(optional)] on_style_data: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_source_data: Option<Callback<MapEvent>>,
     #[prop(optional)] on_data: Option<Callback<MapEvent>>,
+    #[prop(optional)] on_error: Option<Callback<MapEvent>>,
     #[prop(optional)] on_layer_event: Option<Callback<LayerEvent>>,
     #[prop(optional)] on_layer_click: Option<Callback<LayerEvent>>,
     #[prop(optional)] on_layer_double_click: Option<Callback<LayerEvent>>,
@@ -32,11 +41,20 @@ pub fn MapEvents(
 
         let layer_id = layer_id.clone();
         let on_event = on_event.clone();
+        let on_move_start = on_move_start.clone();
         let on_move = on_move.clone();
+        let on_move_end = on_move_end.clone();
+        let on_zoom_start = on_zoom_start.clone();
         let on_zoom = on_zoom.clone();
+        let on_zoom_end = on_zoom_end.clone();
         let on_idle = on_idle.clone();
+        let on_resize = on_resize.clone();
+        let on_render = on_render.clone();
+        let on_style_load = on_style_load.clone();
         let on_style_data = on_style_data.clone();
+        let on_source_data = on_source_data.clone();
         let on_data = on_data.clone();
+        let on_error = on_error.clone();
         let on_layer_event = on_layer_event.clone();
         let on_layer_click = on_layer_click.clone();
         let on_layer_double_click = on_layer_double_click.clone();
@@ -46,11 +64,20 @@ pub fn MapEvents(
         let on_layer_mouse_leave = on_layer_mouse_leave.clone();
 
         let has_map_callbacks = on_event.is_some()
+            || on_move_start.is_some()
             || on_move.is_some()
+            || on_move_end.is_some()
+            || on_zoom_start.is_some()
             || on_zoom.is_some()
+            || on_zoom_end.is_some()
             || on_idle.is_some()
+            || on_resize.is_some()
+            || on_render.is_some()
+            || on_style_load.is_some()
             || on_style_data.is_some()
-            || on_data.is_some();
+            || on_source_data.is_some()
+            || on_data.is_some()
+            || on_error.is_some();
         let map_callback = if has_map_callbacks {
             Some(Closure::wrap(Box::new(move |payload: JsValue| {
                 let Some(event) = crate::js::parse_map_event_payload(payload) else {
@@ -62,9 +89,24 @@ pub fn MapEvents(
                 }
 
                 match event.kind {
+                    crate::events::MapEventKind::MoveStart => {
+                        if let Some(on_move_start) = on_move_start.as_ref() {
+                            on_move_start.run(event);
+                        }
+                    }
                     crate::events::MapEventKind::Move => {
                         if let Some(on_move) = on_move.as_ref() {
                             on_move.run(event);
+                        }
+                    }
+                    crate::events::MapEventKind::MoveEnd => {
+                        if let Some(on_move_end) = on_move_end.as_ref() {
+                            on_move_end.run(event);
+                        }
+                    }
+                    crate::events::MapEventKind::ZoomStart => {
+                        if let Some(on_zoom_start) = on_zoom_start.as_ref() {
+                            on_zoom_start.run(event);
                         }
                     }
                     crate::events::MapEventKind::Zoom => {
@@ -72,9 +114,29 @@ pub fn MapEvents(
                             on_zoom.run(event);
                         }
                     }
+                    crate::events::MapEventKind::ZoomEnd => {
+                        if let Some(on_zoom_end) = on_zoom_end.as_ref() {
+                            on_zoom_end.run(event);
+                        }
+                    }
                     crate::events::MapEventKind::Idle => {
                         if let Some(on_idle) = on_idle.as_ref() {
                             on_idle.run(event);
+                        }
+                    }
+                    crate::events::MapEventKind::Resize => {
+                        if let Some(on_resize) = on_resize.as_ref() {
+                            on_resize.run(event);
+                        }
+                    }
+                    crate::events::MapEventKind::Render => {
+                        if let Some(on_render) = on_render.as_ref() {
+                            on_render.run(event);
+                        }
+                    }
+                    crate::events::MapEventKind::StyleLoad => {
+                        if let Some(on_style_load) = on_style_load.as_ref() {
+                            on_style_load.run(event);
                         }
                     }
                     crate::events::MapEventKind::StyleData => {
@@ -82,9 +144,19 @@ pub fn MapEvents(
                             on_style_data.run(event);
                         }
                     }
+                    crate::events::MapEventKind::SourceData => {
+                        if let Some(on_source_data) = on_source_data.as_ref() {
+                            on_source_data.run(event);
+                        }
+                    }
                     crate::events::MapEventKind::Data => {
                         if let Some(on_data) = on_data.as_ref() {
                             on_data.run(event);
+                        }
+                    }
+                    crate::events::MapEventKind::Error => {
+                        if let Some(on_error) = on_error.as_ref() {
+                            on_error.run(event);
                         }
                     }
                 }
@@ -180,11 +252,20 @@ pub fn MapEvents(
         let _ = handle;
         let _ = layer_id;
         let _ = on_event;
+        let _ = on_move_start;
         let _ = on_move;
+        let _ = on_move_end;
+        let _ = on_zoom_start;
         let _ = on_zoom;
+        let _ = on_zoom_end;
         let _ = on_idle;
+        let _ = on_resize;
+        let _ = on_render;
+        let _ = on_style_load;
         let _ = on_style_data;
+        let _ = on_source_data;
         let _ = on_data;
+        let _ = on_error;
         let _ = on_layer_event;
         let _ = on_layer_click;
         let _ = on_layer_double_click;

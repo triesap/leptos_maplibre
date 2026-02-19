@@ -120,7 +120,7 @@ function current_view_state(map) {
         pitch: map.getPitch(),
     };
 }
-function emit_map_event(handle, map, kind) {
+function emit_map_event(handle, map, kind, extras) {
     const callback = map_event_cbs.get(handle);
     if (callback === undefined) {
         return;
@@ -128,6 +128,7 @@ function emit_map_event(handle, map, kind) {
     callback({
         kind,
         view: current_view_state(map),
+        ...(extras ?? {}),
     });
 }
 function layer_key(handle, layer_id) {
@@ -408,11 +409,20 @@ export function destroy_map(handle) {
     }
     const map_events = map_event_handlers.get(handle);
     if (map_events !== undefined) {
+        map.off("movestart", map_events.movestart);
         map.off("move", map_events.move);
+        map.off("moveend", map_events.moveend);
+        map.off("zoomstart", map_events.zoomstart);
         map.off("zoom", map_events.zoom);
+        map.off("zoomend", map_events.zoomend);
         map.off("idle", map_events.idle);
+        map.off("resize", map_events.resize);
+        map.off("render", map_events.render);
+        map.off("style.load", map_events.styleload);
         map.off("styledata", map_events.styledata);
+        map.off("sourcedata", map_events.sourcedata);
         map.off("data", map_events.data);
+        map.off("error", map_events.error);
         map_event_handlers.delete(handle);
     }
     click_cbs.delete(handle);
@@ -931,26 +941,59 @@ export function register_on_map_events(handle, cb) {
     map_event_cbs.set(handle, cb);
     const previous = map_event_handlers.get(handle);
     if (previous !== undefined) {
+        map.off("movestart", previous.movestart);
         map.off("move", previous.move);
+        map.off("moveend", previous.moveend);
+        map.off("zoomstart", previous.zoomstart);
         map.off("zoom", previous.zoom);
+        map.off("zoomend", previous.zoomend);
         map.off("idle", previous.idle);
+        map.off("resize", previous.resize);
+        map.off("render", previous.render);
+        map.off("style.load", previous.styleload);
         map.off("styledata", previous.styledata);
+        map.off("sourcedata", previous.sourcedata);
         map.off("data", previous.data);
+        map.off("error", previous.error);
         map_event_handlers.delete(handle);
     }
     const handlers = {
+        movestart: () => emit_map_event(handle, map, "move_start"),
         move: () => emit_map_event(handle, map, "move"),
+        moveend: () => emit_map_event(handle, map, "move_end"),
+        zoomstart: () => emit_map_event(handle, map, "zoom_start"),
         zoom: () => emit_map_event(handle, map, "zoom"),
+        zoomend: () => emit_map_event(handle, map, "zoom_end"),
         idle: () => emit_map_event(handle, map, "idle"),
+        resize: () => emit_map_event(handle, map, "resize"),
+        render: () => emit_map_event(handle, map, "render"),
+        styleload: () => emit_map_event(handle, map, "style_load"),
         styledata: () => emit_map_event(handle, map, "style_data"),
+        sourcedata: () => emit_map_event(handle, map, "source_data"),
         data: () => emit_map_event(handle, map, "data"),
+        error: (event) => emit_map_event(handle, map, "error", {
+            message: typeof event?.error?.message === "string"
+                ? event.error.message
+                : typeof event?.error === "string"
+                    ? event.error
+                    : undefined,
+        }),
     };
     map_event_handlers.set(handle, handlers);
+    map.on("movestart", handlers.movestart);
     map.on("move", handlers.move);
+    map.on("moveend", handlers.moveend);
+    map.on("zoomstart", handlers.zoomstart);
     map.on("zoom", handlers.zoom);
+    map.on("zoomend", handlers.zoomend);
     map.on("idle", handlers.idle);
+    map.on("resize", handlers.resize);
+    map.on("render", handlers.render);
+    map.on("style.load", handlers.styleload);
     map.on("styledata", handlers.styledata);
+    map.on("sourcedata", handlers.sourcedata);
     map.on("data", handlers.data);
+    map.on("error", handlers.error);
 }
 export function unregister_on_map_events(handle) {
     const map = get_map(handle);
@@ -961,11 +1004,20 @@ export function unregister_on_map_events(handle) {
     }
     const handlers = map_event_handlers.get(handle);
     if (handlers !== undefined) {
+        map.off("movestart", handlers.movestart);
         map.off("move", handlers.move);
+        map.off("moveend", handlers.moveend);
+        map.off("zoomstart", handlers.zoomstart);
         map.off("zoom", handlers.zoom);
+        map.off("zoomend", handlers.zoomend);
         map.off("idle", handlers.idle);
+        map.off("resize", handlers.resize);
+        map.off("render", handlers.render);
+        map.off("style.load", handlers.styleload);
         map.off("styledata", handlers.styledata);
+        map.off("sourcedata", handlers.sourcedata);
         map.off("data", handlers.data);
+        map.off("error", handlers.error);
         map_event_handlers.delete(handle);
     }
     map_event_cbs.delete(handle);

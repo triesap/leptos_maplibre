@@ -3,11 +3,20 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MapEventKind {
+    MoveStart,
     Move,
+    MoveEnd,
+    ZoomStart,
     Zoom,
+    ZoomEnd,
     Idle,
+    Resize,
+    Render,
+    StyleLoad,
     StyleData,
+    SourceData,
     Data,
+    Error,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -34,6 +43,8 @@ pub struct MapViewState {
 pub struct MapEvent {
     pub kind: MapEventKind,
     pub view: MapViewState,
+    #[serde(default)]
+    pub message: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -61,7 +72,7 @@ mod tests {
     #[test]
     fn map_event_roundtrip() {
         let event = MapEvent {
-            kind: MapEventKind::Move,
+            kind: MapEventKind::Resize,
             view: MapViewState {
                 center_lng: 18.06,
                 center_lat: 59.33,
@@ -69,6 +80,7 @@ mod tests {
                 bearing: 15.0,
                 pitch: 30.0,
             },
+            message: None,
         };
 
         let encoded = serde_json::to_string(&event).expect("serialize map event");
