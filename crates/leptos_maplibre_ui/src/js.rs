@@ -56,7 +56,11 @@ pub(crate) fn register_on_layer_events(
     layer_id: &str,
     callback: &LayerEventClosure,
 ) {
-    leptos_maplibre::register_on_layer_events_js(handle, layer_id, callback.as_ref().unchecked_ref());
+    leptos_maplibre::register_on_layer_events_js(
+        handle,
+        layer_id,
+        callback.as_ref().unchecked_ref(),
+    );
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -131,11 +135,11 @@ pub(crate) fn remove_marker(marker_handle: u32) {
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
-pub(crate) fn register_on_marker_drag_events(
-    marker_handle: u32,
-    callback: &MarkerDragClosure,
-) {
-    leptos_maplibre::register_on_marker_drag_events_js(marker_handle, callback.as_ref().unchecked_ref());
+pub(crate) fn register_on_marker_drag_events(marker_handle: u32, callback: &MarkerDragClosure) {
+    leptos_maplibre::register_on_marker_drag_events_js(
+        marker_handle,
+        callback.as_ref().unchecked_ref(),
+    );
 }
 
 #[cfg(target_arch = "wasm32")]

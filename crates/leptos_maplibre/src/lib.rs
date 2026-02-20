@@ -421,7 +421,11 @@ mod tests {
         );
         set_layout_property(handle, "lots-fill", "visibility", &json!("visible"));
         set_paint_property(handle, "lots-fill", "fill-opacity", &json!(0.5));
-        set_filter(handle, "lots-fill", Some(&json!(["==", ["get", "lot"], "SE-1"])));
+        set_filter(
+            handle,
+            "lots-fill",
+            Some(&json!(["==", ["get", "lot"], "SE-1"])),
+        );
         set_filter(handle, "lots-fill", None);
         set_layer_zoom_range(handle, "lots-fill", Some(2.0), Some(12.0));
         set_feature_state(
@@ -435,7 +439,10 @@ mod tests {
         set_terrain(handle, None);
         set_fog(handle, Some(&json!({"range":[0.6,8.0],"color":"#dbe7ff"})));
         set_fog(handle, None);
-        set_light(handle, Some(&json!({"anchor":"viewport","color":"#ffffff"})));
+        set_light(
+            handle,
+            Some(&json!({"anchor":"viewport","color":"#ffffff"})),
+        );
         set_light(handle, None);
         remove_layer(handle, "lots-fill");
         remove_source(handle, "lots");

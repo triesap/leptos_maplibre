@@ -168,8 +168,10 @@ extern "C" {
     fn js_remove_marker(marker_handle: u32) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = register_on_marker_drag_events)]
-    fn js_register_on_marker_drag_events(marker_handle: u32, cb: &js_sys::Function)
-        -> Result<(), JsValue>;
+    fn js_register_on_marker_drag_events(
+        marker_handle: u32,
+        cb: &js_sys::Function,
+    ) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = unregister_on_marker_drag_events)]
     fn js_unregister_on_marker_drag_events(marker_handle: u32) -> Result<(), JsValue>;
@@ -214,7 +216,8 @@ extern "C" {
     fn js_remove_native_control(control_handle: u32) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = register_on_popup_events)]
-    fn js_register_on_popup_events(popup_handle: u32, cb: &js_sys::Function) -> Result<(), JsValue>;
+    fn js_register_on_popup_events(popup_handle: u32, cb: &js_sys::Function)
+    -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = unregister_on_popup_events)]
     fn js_unregister_on_popup_events(popup_handle: u32) -> Result<(), JsValue>;
@@ -585,8 +588,7 @@ pub(crate) fn register_on_marker_drag_events(marker_handle: u32, callback: &js_s
 
 #[allow(dead_code)]
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn register_on_marker_drag_events(_marker_handle: u32, _callback: &()) {
-}
+pub(crate) fn register_on_marker_drag_events(_marker_handle: u32, _callback: &()) {}
 
 #[allow(dead_code)]
 pub(crate) fn unregister_on_marker_drag_events(marker_handle: u32) {
@@ -664,7 +666,8 @@ pub(crate) fn update_popup(
     max_width: Option<f64>,
 ) {
     #[cfg(target_arch = "wasm32")]
-    if let Err(error) = js_update_popup(popup_handle, lng, lat, html, offset_x, offset_y, max_width) {
+    if let Err(error) = js_update_popup(popup_handle, lng, lat, html, offset_x, offset_y, max_width)
+    {
         log_bridge_error("update_popup", error);
     }
 

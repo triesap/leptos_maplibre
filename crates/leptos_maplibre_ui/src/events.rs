@@ -186,7 +186,8 @@ mod tests {
             "message": "tile request failed"
         });
 
-        let decoded: MapEvent = serde_json::from_value(payload).expect("deserialize map error event");
+        let decoded: MapEvent =
+            serde_json::from_value(payload).expect("deserialize map error event");
         assert_eq!(decoded.kind, MapEventKind::Error);
         assert_eq!(decoded.message.as_deref(), Some("tile request failed"));
     }

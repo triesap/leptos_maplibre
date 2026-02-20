@@ -40,8 +40,8 @@ pub fn MapEvents(
     #[cfg(target_arch = "wasm32")]
     {
         use send_wrapper::SendWrapper;
-        use wasm_bindgen::closure::Closure;
         use wasm_bindgen::JsValue;
+        use wasm_bindgen::closure::Closure;
 
         let layer_id = layer_id.clone();
         let on_event = on_event.clone();
@@ -255,7 +255,9 @@ pub fn MapEvents(
         } else {
             None
         };
-        if let (Some(layer_id), Some(layer_callback)) = (layer_id.as_deref(), layer_callback.as_ref()) {
+        if let (Some(layer_id), Some(layer_callback)) =
+            (layer_id.as_deref(), layer_callback.as_ref())
+        {
             crate::js::register_on_layer_events(handle, layer_id, layer_callback);
         }
         let has_layer_registration = layer_callback.is_some();

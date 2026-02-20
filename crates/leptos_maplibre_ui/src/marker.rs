@@ -21,9 +21,10 @@ pub fn Marker(
 ) -> impl IntoView {
     #[cfg(target_arch = "wasm32")]
     {
-        use std::rc::Rc;
-        use wasm_bindgen::closure::Closure;
+        use send_wrapper::SendWrapper;
+        use std::sync::Arc;
         use wasm_bindgen::JsValue;
+        use wasm_bindgen::closure::Closure;
 
         let marker_handle = RwSignal::new(None::<u32>);
         let anchor = anchor.clone();
@@ -31,29 +32,31 @@ pub fn Marker(
         let has_drag_callbacks =
             on_drag_start.is_some() || on_drag.is_some() || on_drag_end.is_some();
         let marker_drag_callback = if has_drag_callbacks {
-            Some(Rc::new(Closure::wrap(Box::new(move |payload: JsValue| {
-                let Some(event) = crate::js::parse_marker_drag_event_payload(payload) else {
-                    return;
-                };
+            Some(Arc::new(SendWrapper::new(Closure::wrap(
+                Box::new(move |payload: JsValue| {
+                    let Some(event) = crate::js::parse_marker_drag_event_payload(payload) else {
+                        return;
+                    };
 
-                match event.kind {
-                    MarkerDragEventKind::DragStart => {
-                        if let Some(on_drag_start) = on_drag_start.as_ref() {
-                            on_drag_start.run(event);
+                    match event.kind {
+                        MarkerDragEventKind::DragStart => {
+                            if let Some(on_drag_start) = on_drag_start.as_ref() {
+                                on_drag_start.run(event);
+                            }
+                        }
+                        MarkerDragEventKind::Drag => {
+                            if let Some(on_drag) = on_drag.as_ref() {
+                                on_drag.run(event);
+                            }
+                        }
+                        MarkerDragEventKind::DragEnd => {
+                            if let Some(on_drag_end) = on_drag_end.as_ref() {
+                                on_drag_end.run(event);
+                            }
                         }
                     }
-                    MarkerDragEventKind::Drag => {
-                        if let Some(on_drag) = on_drag.as_ref() {
-                            on_drag.run(event);
-                        }
-                    }
-                    MarkerDragEventKind::DragEnd => {
-                        if let Some(on_drag_end) = on_drag_end.as_ref() {
-                            on_drag_end.run(event);
-                        }
-                    }
-                }
-            }) as Box<dyn FnMut(_)>)))
+                }) as Box<dyn FnMut(_)>,
+            ))))
         } else {
             None
         };
@@ -88,8 +91,12 @@ pub fn Marker(
                         offset_y,
                         rotation,
                     ) {
-                        if let Some(marker_drag_callback) = marker_drag_callback_for_effect.as_ref() {
-                            crate::js::register_on_marker_drag_events(next_handle, marker_drag_callback);
+                        if let Some(marker_drag_callback) = marker_drag_callback_for_effect.as_ref()
+                        {
+                            crate::js::register_on_marker_drag_events(
+                                next_handle,
+                                marker_drag_callback.as_ref(),
+                            );
                         }
                         marker_handle.set(Some(next_handle));
                     }

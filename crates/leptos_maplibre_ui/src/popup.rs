@@ -22,32 +22,36 @@ pub fn Popup(
 ) -> impl IntoView {
     #[cfg(target_arch = "wasm32")]
     {
-        use std::rc::Rc;
-        use wasm_bindgen::closure::Closure;
+        use send_wrapper::SendWrapper;
+        use std::sync::Arc;
         use wasm_bindgen::JsValue;
+        use wasm_bindgen::closure::Closure;
 
         let popup_handle = RwSignal::new(None::<u32>);
         let anchor = anchor.clone();
 
         let has_popup_callbacks = on_open.is_some() || on_close.is_some();
         let popup_event_callback = if has_popup_callbacks {
-            Some(Rc::new(Closure::wrap(Box::new(move |payload: JsValue| {
-                let Some(event) = crate::js::parse_popup_lifecycle_event_payload(payload) else {
-                    return;
-                };
-                match event.kind {
-                    PopupLifecycleEventKind::Open => {
-                        if let Some(on_open) = on_open.as_ref() {
-                            on_open.run(event);
+            Some(Arc::new(SendWrapper::new(Closure::wrap(
+                Box::new(move |payload: JsValue| {
+                    let Some(event) = crate::js::parse_popup_lifecycle_event_payload(payload)
+                    else {
+                        return;
+                    };
+                    match event.kind {
+                        PopupLifecycleEventKind::Open => {
+                            if let Some(on_open) = on_open.as_ref() {
+                                on_open.run(event);
+                            }
+                        }
+                        PopupLifecycleEventKind::Close => {
+                            if let Some(on_close) = on_close.as_ref() {
+                                on_close.run(event);
+                            }
                         }
                     }
-                    PopupLifecycleEventKind::Close => {
-                        if let Some(on_close) = on_close.as_ref() {
-                            on_close.run(event);
-                        }
-                    }
-                }
-            }) as Box<dyn FnMut(_)>)))
+                }) as Box<dyn FnMut(_)>,
+            ))))
         } else {
             None
         };
@@ -83,10 +87,13 @@ pub fn Popup(
                         offset_x,
                         offset_y,
                         max_width,
-                    )
-                    {
-                        if let Some(popup_event_callback) = popup_event_callback_for_effect.as_ref() {
-                            crate::js::register_on_popup_events(next_handle, popup_event_callback);
+                    ) {
+                        if let Some(popup_event_callback) = popup_event_callback_for_effect.as_ref()
+                        {
+                            crate::js::register_on_popup_events(
+                                next_handle,
+                                popup_event_callback.as_ref(),
+                            );
                         }
                         popup_handle.set(Some(next_handle));
                     }

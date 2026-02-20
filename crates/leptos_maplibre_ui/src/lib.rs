@@ -8,25 +8,12 @@ mod marker;
 mod popup;
 
 pub use controls::{
-    AttributionControl,
-    FullscreenControl,
-    GeolocateControl,
-    NativeControl,
-    NativeControlKind,
-    NavigationControl,
-    ScaleControl,
+    AttributionControl, FullscreenControl, GeolocateControl, NativeControl, NativeControlKind,
+    NavigationControl, ScaleControl,
 };
 pub use events::{
-    LayerEvent,
-    LayerEventKind,
-    LayerFeatureHit,
-    MarkerDragEvent,
-    MarkerDragEventKind,
-    PopupLifecycleEvent,
-    PopupLifecycleEventKind,
-    MapEvent,
-    MapEventKind,
-    MapViewState,
+    LayerEvent, LayerEventKind, LayerFeatureHit, MapEvent, MapEventKind, MapViewState,
+    MarkerDragEvent, MarkerDragEventKind, PopupLifecycleEvent, PopupLifecycleEventKind,
 };
 pub use map_events::MapEvents;
 pub use marker::{Marker, MarkerProps};
