@@ -14,6 +14,11 @@ This repository is a Rust workspace. Typical tasks:
 - `cargo fmt`
 - `cargo test`
 
+Example validation tasks:
+
+- `cargo check --manifest-path examples/leptos-csr/Cargo.toml --target wasm32-unknown-unknown`
+- `cd examples/leptos-csr && trunk build`
+
 ## Pull request checklist
 
 - Keep changes focused and well-scoped

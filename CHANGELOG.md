@@ -8,3 +8,5 @@ Semantic Versioning.
 ## [Unreleased]
 
 - Initial repository bootstrap.
+- Add `examples/leptos-csr` with a CSR map demo.
+- Document example run and validation steps.

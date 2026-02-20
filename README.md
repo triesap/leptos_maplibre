@@ -9,11 +9,19 @@ MapLibre GL JS bindings for Leptos in Rust/WASM.
 - Keep core non-opinionated and leave control UI to application code.
 - Initialize on client mount only for SSR and hydration safety.
 
+## Examples
+
+- `examples/leptos-csr`: CSR demo showing current intended usage with `MapView`, `MapEvents`, `Marker`, and `Popup`.
+
+Run the example:
+
+- `cargo check --manifest-path examples/leptos-csr/Cargo.toml --target wasm32-unknown-unknown`
+- `cd examples/leptos-csr`
+- `trunk serve`
+
 ## JS bridge source
 
 The wasm bridge consumes `crates/leptos_maplibre/bindings/js/src/map.js`.
-
-`map.js` is the source of truth and is edited directly.
 
 ## Contributing
 

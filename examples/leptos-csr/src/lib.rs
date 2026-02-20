@@ -6,20 +6,20 @@ use leptos_maplibre::{
 use leptos_maplibre_ui::{LayerEvent, MapEvents, Marker, Popup};
 use serde_json::json;
 
-const TOFINO_SOURCE_ID: &str = "tofino_demo_source";
-const TOFINO_AREA_LAYER_ID: &str = "tofino_area_fill";
-const TOFINO_ROUTE_LAYER_ID: &str = "tofino_route_line";
-const TOFINO_POI_LAYER_ID: &str = "tofino_poi_circle";
-const TOFINO_LABEL_LAYER_ID: &str = "tofino_labels";
+const DEMO_SOURCE_ID: &str = "coastal_demo_source";
+const DEMO_AREA_LAYER_ID: &str = "coastal_area_fill";
+const DEMO_ROUTE_LAYER_ID: &str = "coastal_route_line";
+const DEMO_POI_LAYER_ID: &str = "coastal_poi_circle";
+const DEMO_LABEL_LAYER_ID: &str = "coastal_labels";
 
 #[component]
 pub fn App() -> impl IntoView {
-    let status = RwSignal::new(String::from("tofino map waiting for map load"));
+    let status = RwSignal::new(String::from("map demo waiting for map load"));
     let map_handle = RwSignal::new(None::<MapHandle>);
     let marker_lng = RwSignal::new(-126.2622);
     let marker_lat = RwSignal::new(49.3579);
     let popup_html = RwSignal::new(String::from(
-        "<strong>Hot Springs Cove</strong><br/>click a map feature",
+        "<strong>map demo</strong><br/>click a map feature",
     ));
     let selected_feature_id = RwSignal::new(None::<serde_json::Value>);
 
@@ -56,34 +56,29 @@ pub fn App() -> impl IntoView {
         let status = status;
         let map_handle = map_handle;
         Callback::new(move |handle: MapHandle| {
-            add_geojson_source(handle, TOFINO_SOURCE_ID, &tofino_geojson(), Some("id"));
+            add_geojson_source(handle, DEMO_SOURCE_ID, &demo_geojson(), Some("id"));
             add_layer(
                 handle,
-                TOFINO_AREA_LAYER_ID,
-                &tofino_area_fill_layer_spec(),
+                DEMO_AREA_LAYER_ID,
+                &demo_area_fill_layer_spec(),
                 None,
             );
             add_layer(
                 handle,
-                TOFINO_ROUTE_LAYER_ID,
-                &tofino_route_line_layer_spec(),
+                DEMO_ROUTE_LAYER_ID,
+                &demo_route_line_layer_spec(),
                 None,
             );
             add_layer(
                 handle,
-                TOFINO_POI_LAYER_ID,
-                &tofino_poi_circle_layer_spec(),
+                DEMO_POI_LAYER_ID,
+                &demo_poi_circle_layer_spec(),
                 None,
             );
-            add_layer(
-                handle,
-                TOFINO_LABEL_LAYER_ID,
-                &tofino_label_layer_spec(),
-                None,
-            );
+            add_layer(handle, DEMO_LABEL_LAYER_ID, &demo_label_layer_spec(), None);
             map_handle.set(Some(handle));
             status.set(format!(
-                "tofino map ready: handle {}, source and layers mounted",
+                "map ready: handle {}, source and layers mounted",
                 handle.0
             ));
         })
@@ -140,7 +135,7 @@ pub fn App() -> impl IntoView {
                 if let Some(previous_id) = selected_feature_id.get_untracked() {
                     set_feature_state(
                         handle,
-                        TOFINO_SOURCE_ID,
+                        DEMO_SOURCE_ID,
                         None,
                         &previous_id,
                         &json!({"selected": false}),
@@ -154,7 +149,7 @@ pub fn App() -> impl IntoView {
                 {
                     set_feature_state(
                         handle,
-                        TOFINO_SOURCE_ID,
+                        DEMO_SOURCE_ID,
                         None,
                         &next_id,
                         &json!({"selected": true}),
@@ -188,7 +183,7 @@ pub fn App() -> impl IntoView {
                             view! {
                                 <MapEvents
                                     handle=handle
-                                    layer_id=String::from(TOFINO_POI_LAYER_ID)
+                                    layer_id=String::from(DEMO_POI_LAYER_ID)
                                     on_layer_click=on_layer_click
                                 />
                                 <Marker handle=handle lng=marker_lng lat=marker_lat draggable=true />
@@ -209,16 +204,16 @@ pub fn App() -> impl IntoView {
     }
 }
 
-fn tofino_geojson() -> serde_json::Value {
+fn demo_geojson() -> serde_json::Value {
     json!({
         "type": "FeatureCollection",
         "features": [
             {
                 "type": "Feature",
                 "properties": {
-                    "id": "tofino-harbour",
+                    "id": "coastal-harbour",
                     "kind": "poi",
-                    "label": "Tofino Harbour",
+                    "label": "Coastal Harbour",
                     "category": "town"
                 },
                 "geometry": { "type": "Point", "coordinates": [-125.9135, 49.1510] }
@@ -226,9 +221,9 @@ fn tofino_geojson() -> serde_json::Value {
             {
                 "type": "Feature",
                 "properties": {
-                    "id": "hsc-landing",
+                    "id": "cove-landing",
                     "kind": "poi",
-                    "label": "Maquinna Marine Provincial Park Landing",
+                    "label": "Marine Park Landing",
                     "category": "landing"
                 },
                 "geometry": { "type": "Point", "coordinates": [-126.2588, 49.3558] }
@@ -236,7 +231,7 @@ fn tofino_geojson() -> serde_json::Value {
             {
                 "type": "Feature",
                 "properties": {
-                    "id": "hsc-boardwalk",
+                    "id": "cove-trailhead",
                     "kind": "poi",
                     "label": "Boardwalk Trailhead",
                     "category": "trailhead"
@@ -246,9 +241,9 @@ fn tofino_geojson() -> serde_json::Value {
             {
                 "type": "Feature",
                 "properties": {
-                    "id": "hsc-pools",
+                    "id": "cove-pools",
                     "kind": "poi",
-                    "label": "Hot Springs Pools",
+                    "label": "Cove Pools",
                     "category": "spring"
                 },
                 "geometry": { "type": "Point", "coordinates": [-126.2622, 49.3579] }
@@ -258,7 +253,7 @@ fn tofino_geojson() -> serde_json::Value {
                 "properties": {
                     "id": "boat-route",
                     "kind": "route",
-                    "label": "Boat Route to Hot Springs Cove",
+                    "label": "Boat Route to Cove",
                     "category": "route"
                 },
                 "geometry": {
@@ -275,9 +270,9 @@ fn tofino_geojson() -> serde_json::Value {
             {
                 "type": "Feature",
                 "properties": {
-                    "id": "hsc-area",
+                    "id": "coastal-cove-area",
                     "kind": "area",
-                    "label": "Hot Springs Cove",
+                    "label": "Coastal Cove",
                     "category": "zone"
                 },
                 "geometry": {
@@ -295,11 +290,11 @@ fn tofino_geojson() -> serde_json::Value {
     })
 }
 
-fn tofino_area_fill_layer_spec() -> serde_json::Value {
+fn demo_area_fill_layer_spec() -> serde_json::Value {
     json!({
-        "id": TOFINO_AREA_LAYER_ID,
+        "id": DEMO_AREA_LAYER_ID,
         "type": "fill",
-        "source": TOFINO_SOURCE_ID,
+        "source": DEMO_SOURCE_ID,
         "filter": ["==", ["get", "kind"], "area"],
         "paint": {
             "fill-color": ["case", ["boolean", ["feature-state", "selected"], false], "#f97316", "#0ea5e9"],
@@ -308,11 +303,11 @@ fn tofino_area_fill_layer_spec() -> serde_json::Value {
     })
 }
 
-fn tofino_route_line_layer_spec() -> serde_json::Value {
+fn demo_route_line_layer_spec() -> serde_json::Value {
     json!({
-        "id": TOFINO_ROUTE_LAYER_ID,
+        "id": DEMO_ROUTE_LAYER_ID,
         "type": "line",
-        "source": TOFINO_SOURCE_ID,
+        "source": DEMO_SOURCE_ID,
         "filter": ["==", ["get", "kind"], "route"],
         "paint": {
             "line-color": "#2563eb",
@@ -322,11 +317,11 @@ fn tofino_route_line_layer_spec() -> serde_json::Value {
     })
 }
 
-fn tofino_poi_circle_layer_spec() -> serde_json::Value {
+fn demo_poi_circle_layer_spec() -> serde_json::Value {
     json!({
-        "id": TOFINO_POI_LAYER_ID,
+        "id": DEMO_POI_LAYER_ID,
         "type": "circle",
-        "source": TOFINO_SOURCE_ID,
+        "source": DEMO_SOURCE_ID,
         "filter": ["==", ["get", "kind"], "poi"],
         "paint": {
             "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 9.0, 6.0],
@@ -337,11 +332,11 @@ fn tofino_poi_circle_layer_spec() -> serde_json::Value {
     })
 }
 
-fn tofino_label_layer_spec() -> serde_json::Value {
+fn demo_label_layer_spec() -> serde_json::Value {
     json!({
-        "id": TOFINO_LABEL_LAYER_ID,
+        "id": DEMO_LABEL_LAYER_ID,
         "type": "symbol",
-        "source": TOFINO_SOURCE_ID,
+        "source": DEMO_SOURCE_ID,
         "layout": {
             "text-field": ["get", "label"],
             "text-size": 12.0,
