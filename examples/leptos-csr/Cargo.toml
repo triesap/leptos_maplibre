@@ -1,0 +1,15 @@
+[package]
+name = "leptos_maplibre_example_csr"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+leptos = { workspace = true, features = ["csr"] }
+console_error_panic_hook = "0.1"
+console_log = "1"
+log = "0.4"
+
+[lints]
+workspace = true

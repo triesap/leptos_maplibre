@@ -1,7 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/*"
+    "crates/*",
+    "examples/*"
 ]
 
 [workspace.package]
@@ -31,6 +32,8 @@ web-sys = { version = "0.3.77", features = [
     "Window",
     "console"
 ] }
+leptos_maplibre = { version = "0.1.0", path = "crates/leptos_maplibre" }
+leptos_maplibre_ui = { version = "0.1.0", path = "crates/leptos_maplibre_ui" }
 
 [profile.release]
 codegen-units = 1
