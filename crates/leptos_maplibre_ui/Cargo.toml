@@ -7,13 +7,16 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 readme.workspace = true
+description = "Optional UI primitives for leptos_maplibre."
+keywords = ["leptos", "maplibre", "maps", "wasm", "web"]
+categories = ["web-programming", "wasm"]
 
 [lib]
 path = "src/lib.rs"
 
 [dependencies]
 leptos = { workspace = true, features = ["csr"] }
-leptos_maplibre = { path = "../leptos_maplibre" }
+leptos_maplibre = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 

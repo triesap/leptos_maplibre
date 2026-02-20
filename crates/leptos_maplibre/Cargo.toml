@@ -7,6 +7,9 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 readme.workspace = true
+description = "MapLibre GL JS bindings for Leptos."
+keywords = ["leptos", "maplibre", "maps", "wasm", "web"]
+categories = ["web-programming", "wasm"]
 
 [lib]
 path = "src/lib.rs"

@@ -1,0 +1,128 @@
+name: publish crates
+
+on:
+  workflow_dispatch:
+    inputs:
+      crates:
+        description: "space or comma separated crate names (empty = full release)"
+        required: false
+        default: ""
+      dry_run:
+        description: "run cargo publish --dry-run"
+        type: boolean
+        required: false
+        default: false
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-crates
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.92.0
+
+      - name: cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: verify workspace
+        run: cargo check --workspace
+
+      - name: publish crates
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          CRATES_INPUT: ${{ github.event.inputs.crates }}
+          DRY_RUN_INPUT: ${{ github.event.inputs.dry_run }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          dry_run="false"
+          crates_input=""
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            crates_input="${CRATES_INPUT:-}"
+            dry_run="${DRY_RUN_INPUT:-false}"
+          fi
+
+          flags=(--locked)
+          if [ "${dry_run}" = "true" ]; then
+            flags+=(--dry-run)
+          fi
+
+          if [ "${dry_run}" != "true" ] && [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
+            echo "CRATES_IO_TOKEN secret is required for publish runs"
+            exit 1
+          fi
+
+          default_crates=(
+            leptos_maplibre
+            leptos_maplibre_ui
+          )
+
+          if [ -n "${crates_input}" ]; then
+            crates_input="${crates_input//,/ }"
+            read -r -a crates <<< "${crates_input}"
+          else
+            crates=("${default_crates[@]}")
+          fi
+
+          for crate in "${crates[@]}"; do
+            case "${crate}" in
+              leptos_maplibre|leptos_maplibre_ui) ;;
+              *)
+                echo "unsupported crate input: ${crate}"
+                exit 1
+                ;;
+            esac
+          done
+
+          publish_crate() {
+            local crate="$1"
+            local attempt=1
+            local max_attempts=6
+            local output=""
+            echo "publishing ${crate}"
+            while true; do
+              if output=$(cargo publish -p "${crate}" "${flags[@]}" 2>&1); then
+                echo "${output}"
+                return 0
+              fi
+              echo "${output}"
+              if echo "${output}" | grep -Eqi "already uploaded|already exists on crates.io index"; then
+                echo "${crate} already published; skipping"
+                return 0
+              fi
+              if echo "${output}" | grep -qi "no matching package named"; then
+                if [ "${attempt}" -lt "${max_attempts}" ]; then
+                  echo "dependency index not updated yet; retrying in 20s"
+                  attempt=$((attempt + 1))
+                  sleep 20
+                  continue
+                fi
+              fi
+              return 1
+            done
+          }
+
+          for crate in "${crates[@]}"; do
+            publish_crate "${crate}"
+            if [ "${dry_run}" != "true" ]; then
+              sleep 20
+            fi
+          done
