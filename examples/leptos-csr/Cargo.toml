@@ -7,6 +7,9 @@ publish = false
 
 [dependencies]
 leptos = { workspace = true, features = ["csr"] }
+leptos_maplibre.workspace = true
+leptos_maplibre_ui.workspace = true
+serde_json.workspace = true
 console_error_panic_hook = "0.1"
 console_log = "1"
 log = "0.4"
