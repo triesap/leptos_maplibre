@@ -53,8 +53,6 @@ pub fn App() -> impl IntoView {
     };
 
     let on_ready = {
-        let status = status;
-        let map_handle = map_handle;
         Callback::new(move |handle: MapHandle| {
             add_geojson_source(handle, DEMO_SOURCE_ID, &demo_geojson(), Some("id"));
             add_layer(
@@ -85,10 +83,6 @@ pub fn App() -> impl IntoView {
     };
 
     let on_click = {
-        let status = status;
-        let marker_lng = marker_lng;
-        let marker_lat = marker_lat;
-        let popup_html = popup_html;
         Callback::new(move |event: MapClickEvent| {
             marker_lng.set(event.lng);
             marker_lat.set(event.lat);
@@ -108,12 +102,6 @@ pub fn App() -> impl IntoView {
     };
 
     let on_layer_click = {
-        let status = status;
-        let map_handle = map_handle;
-        let selected_feature_id = selected_feature_id;
-        let marker_lng = marker_lng;
-        let marker_lat = marker_lat;
-        let popup_html = popup_html;
         Callback::new(move |event: LayerEvent| {
             marker_lng.set(event.lng);
             marker_lat.set(event.lat);

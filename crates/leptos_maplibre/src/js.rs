@@ -489,6 +489,10 @@ pub(crate) fn set_style(handle: MapHandle, style_url: &str) {
 }
 
 #[allow(dead_code)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Mirror the JavaScript marker bridge's positional parameters."
+)]
 pub(crate) fn create_marker(
     handle: MapHandle,
     lng: f64,
@@ -528,6 +532,10 @@ pub(crate) fn create_marker(
 }
 
 #[allow(dead_code)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Mirror the JavaScript marker bridge's positional parameters."
+)]
 pub(crate) fn update_marker(
     marker_handle: u32,
     lng: f64,
@@ -604,6 +612,10 @@ pub(crate) fn unregister_on_marker_drag_events(marker_handle: u32) {
 }
 
 #[allow(dead_code)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Mirror the JavaScript popup bridge's positional parameters."
+)]
 pub(crate) fn create_popup(
     handle: MapHandle,
     lng: f64,
@@ -793,6 +805,10 @@ pub(crate) fn ease_to(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Mirror the established positional camera API and JavaScript bridge."
+)]
 pub(crate) fn fit_bounds(
     handle: MapHandle,
     west: f64,

@@ -40,6 +40,10 @@ pub fn ease_to(
     js::ease_to(handle, lng, lat, zoom, bearing, pitch, duration_ms);
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Preserve the positional camera API shared with the JavaScript bridge."
+)]
 pub fn fit_bounds(
     handle: MapHandle,
     west: f64,

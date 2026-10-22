@@ -9,6 +9,9 @@ Thanks for your interest in contributing to leptos_maplibre.
 
 ## Development setup
 
+Use Rust 1.99.0, the pinned development toolchain and minimum supported version,
+with its declared WASM target.
+
 This repository is a Rust workspace. Typical tasks:
 
 - `cargo fmt`

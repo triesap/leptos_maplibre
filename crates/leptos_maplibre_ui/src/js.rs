@@ -150,6 +150,10 @@ pub(crate) fn unregister_on_marker_drag_events(marker_handle: u32) {
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Mirror the JavaScript popup bridge's positional parameters."
+)]
 pub(crate) fn create_popup(
     handle: MapHandle,
     lng: f64,
@@ -256,6 +260,10 @@ pub(crate) fn unregister_on_marker_drag_events(_marker_handle: u32) {}
 
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Keep the native stub's signature identical to the JavaScript popup bridge."
+)]
 pub(crate) fn create_popup(
     _handle: MapHandle,
     _lng: f64,
